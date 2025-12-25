@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>开心消消乐 - 现代版</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <header>
+            <div class="stat-item">
+                <span class="label">得分</span>
+                <span id="score">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="label">关卡</span>
+                <span id="level">1</span>
+            </div>
+            <div class="stat-item">
+                <span class="label">目标</span>
+                <span id="target">1000</span>
+            </div>
+            <div class="stat-item">
+                <span class="label">步数</span>
+                <span id="moves">30</span>
+            </div>
+        </header>
+
+        <div id="board-wrapper">
+            <div id="game-board"></div>
+            <div id="overlay" class="hidden">
+                <div class="message">
+                    <h2 id="overlay-title">游戏结束</h2>
+                    <p id="overlay-score">最终得分: 0</p>
+                    <button id="restart-btn">重新开始</button>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <div class="progress-container">
+                <div id="progress-bar" style="width: 0%"></div>
+            </div>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

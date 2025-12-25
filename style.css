@@ -185,6 +185,14 @@ header {
     background: #357abd;
 }
 
+#next-level-btn {
+    background: var(--accent-color);
+}
+
+#next-level-btn:hover {
+    background: #e69516;
+}
+
 footer {
     padding: 10px 0 5px 0;
 }

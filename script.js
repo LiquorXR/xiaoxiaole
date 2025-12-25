@@ -1,13 +1,14 @@
 const ROWS = 12;
 const COLS = 8;
-const TILE_TYPES = ['🍎', '🍇', '🍊', '🍋', '🥝', '🫐'];
-const SCORE_PER_TILE = 10;
+const ALL_TILE_TYPES = ['🍎', '🍇', '🍊', '🍋', '🥝', '🫐', '🍓', '🍑', '🍍'];
+const SCORE_PER_TILE = 1;
 
+let currentTileTypes = [];
 let board = []; // Stores the type of each tile
 let tileElements = []; // Stores the DOM elements
 let score = 0;
 let moves = 30;
-let target = 1000;
+let target = 100;
 let level = 1;
 let selectedTile = null;
 let isProcessing = false;
@@ -25,11 +26,44 @@ const progressBar = document.getElementById('progress-bar');
 const overlay = document.getElementById('overlay');
 const restartBtn = document.getElementById('restart-btn');
 
+function getLevelConfig(lvl) {
+    // 难度随关卡增加：
+    // 1. 方块种类增加：起始3种，每2关增加1种，最多9种
+    const tileCount = Math.min(3 + Math.floor((lvl - 1) / 2), ALL_TILE_TYPES.length);
+    
+    // 2. 目标分数增加：基础100，每关增加 50 * level
+    const targetScore = 100 + (lvl - 1) * 50 * lvl;
+    
+    // 3. 初始步数：基础30，随关卡略微减少，但最低不少于15步
+    const initialMoves = Math.max(15, 30 - Math.floor((lvl - 1) / 2));
+
+    return {
+        tileTypes: ALL_TILE_TYPES.slice(0, tileCount),
+        target: targetScore,
+        moves: initialMoves
+    };
+}
+
 function initGame() {
-    score = 0;
-    moves = 30;
     level = 1;
-    target = 1000;
+    score = 0;
+    startLevel(level);
+}
+
+function startLevel(lvl) {
+    const config = getLevelConfig(lvl);
+    currentTileTypes = config.tileTypes;
+    target = config.target;
+    moves = config.moves;
+    score = 0; // 每关分数重置，挑战该关卡目标
+    
+    // 清除可能存在的下一关按钮
+    const nextBtn = document.getElementById('next-level-btn');
+    if (nextBtn) nextBtn.remove();
+    
+    // 恢复重新开始按钮显示
+    restartBtn.classList.remove('hidden');
+    
     updateUI();
     overlay.classList.add('hidden');
     createBoard();
@@ -55,7 +89,7 @@ function createBoard() {
     for (let i = 0; i < ROWS * COLS; i++) {
         let randomTile;
         do {
-            randomTile = TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
+            randomTile = currentTileTypes[Math.floor(Math.random() * currentTileTypes.length)];
         } while (isInitialMatch(i, randomTile));
         
         board[i] = randomTile;
@@ -269,7 +303,7 @@ function dropTiles() {
 function refillBoard() {
     for (let i = 0; i < ROWS * COLS; i++) {
         if (board[i] === null) {
-            const type = TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
+            const type = currentTileTypes[Math.floor(Math.random() * currentTileTypes.length)];
             board[i] = type;
             
             const tileElement = document.createElement('div');
@@ -328,16 +362,25 @@ function updateUI() {
 
 async function checkGameOver() {
     if (score >= target) {
-        level++;
-        target += 1000;
-        moves += 15;
-        updateUI();
-        // Show level up message
-        document.getElementById('overlay-title').innerText = `下一关: 第 ${level} 关`;
-        document.getElementById('overlay-score').innerText = `目标得分: ${target}`;
+        // 过关逻辑
+        document.getElementById('overlay-title').innerText = `恭喜过关！`;
+        document.getElementById('overlay-score').innerText = `本关得分: ${score}`;
+        
+        if (!document.getElementById('next-level-btn')) {
+            const nextBtn = document.createElement('button');
+            nextBtn.id = 'next-level-btn';
+            nextBtn.innerText = `进入第 ${level + 1} 关`;
+            nextBtn.onclick = () => {
+                level++;
+                startLevel(level);
+            };
+            
+            const messageBox = document.querySelector('.message');
+            restartBtn.classList.add('hidden');
+            messageBox.appendChild(nextBtn);
+        }
+        
         overlay.classList.remove('hidden');
-        await sleep(2000);
-        overlay.classList.add('hidden');
     } else if (moves <= 0) {
         endGame('步数用光了');
     }
@@ -346,6 +389,12 @@ async function checkGameOver() {
 function endGame(message) {
     document.getElementById('overlay-title').innerText = message;
     document.getElementById('overlay-score').innerText = `最终得分: ${score}`;
+    
+    // 确保没有下一关按钮
+    const nextBtn = document.getElementById('next-level-btn');
+    if (nextBtn) nextBtn.remove();
+    
+    restartBtn.classList.remove('hidden');
     overlay.classList.remove('hidden');
 }
 

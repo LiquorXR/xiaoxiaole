@@ -1,4 +1,4 @@
-const ROWS = 10;
+const ROWS = 12;
 const COLS = 8;
 const TILE_TYPES = ['🍎', '🍇', '🍊', '🍋', '🥝', '🫐'];
 const SCORE_PER_TILE = 10;

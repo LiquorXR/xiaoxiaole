@@ -82,20 +82,22 @@ function createBoard() {
 }
 
 function handleStart(index, x, y) {
-    if (isProcessing || moves <= 0) return;
+    if (isProcessing || moves <= 0 || isNaN(index)) return;
     touchStartX = x;
     touchStartY = y;
     
-    if (selectedTile !== null) {
+    if (selectedTile !== null && tileElements[selectedTile]) {
         tileElements[selectedTile].classList.remove('selected');
     }
     
     selectedTile = index;
-    tileElements[index].classList.add('selected');
+    if (tileElements[index]) {
+        tileElements[index].classList.add('selected');
+    }
 }
 
 function handleEnd(e) {
-    if (selectedTile === null || isProcessing) return;
+    if (selectedTile === null || isNaN(selectedTile) || isProcessing) return;
 
     let endX, endY;
     if (e.type === 'touchend') {
@@ -144,7 +146,8 @@ function isInitialMatch(index, type) {
 
 async function swapTiles(idx1, idx2) {
     isProcessing = true;
-    tileElements[idx1].classList.remove('selected');
+    try {
+        if (tileElements[idx1]) tileElements[idx1].classList.remove('selected');
 
     // Visual swap
     const tempType = board[idx1];
@@ -175,7 +178,11 @@ async function swapTiles(idx1, idx2) {
         await sleep(300);
     }
     
-    isProcessing = false;
+    } catch (error) {
+        console.error('Error in swapTiles:', error);
+    } finally {
+        isProcessing = false;
+    }
     await checkGameOver();
 }
 
@@ -266,6 +273,7 @@ function refillBoard() {
             
             const tileElement = document.createElement('div');
             tileElement.classList.add('tile');
+            tileElement.dataset.index = i; // 修复：补充缺失的 index
             tileElement.innerText = type;
             
             // Start from above the board for falling effect
@@ -275,10 +283,14 @@ function refillBoard() {
             tileElement.style.top = `-${size}px`;
             tileElement.style.opacity = '0';
             
-            tileElement.addEventListener('mousedown', (e) => handleStart(parseInt(e.currentTarget.dataset.index), e.clientX, e.clientY));
+            tileElement.addEventListener('mousedown', (e) => {
+                const idx = parseInt(e.currentTarget.dataset.index);
+                handleStart(idx, e.clientX, e.clientY);
+            });
             tileElement.addEventListener('touchstart', (e) => {
                 const touch = e.touches[0];
-                handleStart(parseInt(e.currentTarget.dataset.index), touch.clientX, touch.clientY);
+                const idx = parseInt(e.currentTarget.dataset.index);
+                handleStart(idx, touch.clientX, touch.clientY);
             }, {passive: true});
 
             gameBoard.appendChild(tileElement);

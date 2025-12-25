@@ -1,4 +1,5 @@
-const BOARD_SIZE = 8;
+const ROWS = 10;
+const COLS = 8;
 const TILE_TYPES = ['🍎', '🍇', '🍊', '🍋', '🥝', '🫐'];
 const SCORE_PER_TILE = 10;
 
@@ -35,8 +36,8 @@ function initGame() {
 }
 
 function getTilePos(index) {
-    const x = index % BOARD_SIZE;
-    const y = Math.floor(index / BOARD_SIZE);
+    const x = index % COLS;
+    const y = Math.floor(index / COLS);
     const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--gap'));
     const size = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tile-size'));
     
@@ -51,7 +52,7 @@ function createBoard() {
     board = [];
     tileElements = [];
     
-    for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+    for (let i = 0; i < ROWS * COLS; i++) {
         let randomTile;
         do {
             randomTile = TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
@@ -114,18 +115,18 @@ function handleEnd(e) {
     const minSwipeDistance = 30;
 
     let targetIndex = -1;
-    const x = selectedTile % BOARD_SIZE;
-    const y = Math.floor(selectedTile / BOARD_SIZE);
+    const x = selectedTile % COLS;
+    const y = Math.floor(selectedTile / COLS);
 
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
         if (Math.abs(deltaX) > minSwipeDistance) {
-            if (deltaX > 0 && x < BOARD_SIZE - 1) targetIndex = selectedTile + 1;
+            if (deltaX > 0 && x < COLS - 1) targetIndex = selectedTile + 1;
             else if (deltaX < 0 && x > 0) targetIndex = selectedTile - 1;
         }
     } else {
         if (Math.abs(deltaY) > minSwipeDistance) {
-            if (deltaY > 0 && y < BOARD_SIZE - 1) targetIndex = selectedTile + BOARD_SIZE;
-            else if (deltaY < 0 && y > 0) targetIndex = selectedTile - BOARD_SIZE;
+            if (deltaY > 0 && y < ROWS - 1) targetIndex = selectedTile + COLS;
+            else if (deltaY < 0 && y > 0) targetIndex = selectedTile - COLS;
         }
     }
 
@@ -137,10 +138,10 @@ function handleEnd(e) {
 }
 
 function isInitialMatch(index, type) {
-    const x = index % BOARD_SIZE;
-    const y = Math.floor(index / BOARD_SIZE);
+    const x = index % COLS;
+    const y = Math.floor(index / COLS);
     if (x >= 2 && board[index - 1] === type && board[index - 2] === type) return true;
-    if (y >= 2 && board[index - BOARD_SIZE] === type && board[index - 2 * BOARD_SIZE] === type) return true;
+    if (y >= 2 && board[index - COLS] === type && board[index - 2 * COLS] === type) return true;
     return false;
 }
 
@@ -189,9 +190,9 @@ async function swapTiles(idx1, idx2) {
 function checkMatches() {
     let matchedIndices = new Set();
     // Horizontal
-    for (let y = 0; y < BOARD_SIZE; y++) {
-        for (let x = 0; x < BOARD_SIZE - 2; x++) {
-            const idx = y * BOARD_SIZE + x;
+    for (let y = 0; y < ROWS; y++) {
+        for (let x = 0; x < COLS - 2; x++) {
+            const idx = y * COLS + x;
             const type = board[idx];
             if (type && board[idx+1] === type && board[idx+2] === type) {
                 matchedIndices.add(idx); matchedIndices.add(idx+1); matchedIndices.add(idx+2);
@@ -199,12 +200,12 @@ function checkMatches() {
         }
     }
     // Vertical
-    for (let x = 0; x < BOARD_SIZE; x++) {
-        for (let y = 0; y < BOARD_SIZE - 2; y++) {
-            const idx = y * BOARD_SIZE + x;
+    for (let x = 0; x < COLS; x++) {
+        for (let y = 0; y < ROWS - 2; y++) {
+            const idx = y * COLS + x;
             const type = board[idx];
-            if (type && board[idx+BOARD_SIZE] === type && board[idx+2*BOARD_SIZE] === type) {
-                matchedIndices.add(idx); matchedIndices.add(idx+BOARD_SIZE); matchedIndices.add(idx+2*BOARD_SIZE);
+            if (type && board[idx+COLS] === type && board[idx+2*COLS] === type) {
+                matchedIndices.add(idx); matchedIndices.add(idx+COLS); matchedIndices.add(idx+2*COLS);
             }
         }
     }
@@ -248,15 +249,15 @@ async function processMatches() {
 }
 
 function dropTiles() {
-    for (let x = 0; x < BOARD_SIZE; x++) {
+    for (let x = 0; x < COLS; x++) {
         let emptySpot = -1;
-        for (let y = BOARD_SIZE - 1; y >= 0; y--) {
-            const idx = y * BOARD_SIZE + x;
+        for (let y = ROWS - 1; y >= 0; y--) {
+            const idx = y * COLS + x;
             if (board[idx] === null) {
                 if (emptySpot === -1) emptySpot = y;
             } else if (emptySpot !== -1) {
-                board[emptySpot * BOARD_SIZE + x] = board[idx];
-                tileElements[emptySpot * BOARD_SIZE + x] = tileElements[idx];
+                board[emptySpot * COLS + x] = board[idx];
+                tileElements[emptySpot * COLS + x] = tileElements[idx];
                 board[idx] = null;
                 tileElements[idx] = null;
                 emptySpot--;
@@ -266,7 +267,7 @@ function dropTiles() {
 }
 
 function refillBoard() {
-    for (let i = 0; i < BOARD_SIZE * BOARD_SIZE; i++) {
+    for (let i = 0; i < ROWS * COLS; i++) {
         if (board[i] === null) {
             const type = TILE_TYPES[Math.floor(Math.random() * TILE_TYPES.length)];
             board[i] = type;
@@ -277,7 +278,7 @@ function refillBoard() {
             tileElement.innerText = type;
             
             // Start from above the board for falling effect
-            const x = i % BOARD_SIZE;
+            const x = i % COLS;
             const size = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tile-size'));
             tileElement.style.left = getTilePos(i).left;
             tileElement.style.top = `-${size}px`;

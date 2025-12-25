@@ -170,7 +170,7 @@ header {
 }
 
 .message button {
-    margin-top: 20px;
+    margin: 20px 5px 5px 5px;
     padding: 10px 30px;
     background: var(--primary-color);
     color: white;

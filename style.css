@@ -63,7 +63,7 @@ header {
     margin-bottom: 5px;
 }
 
-#score, #target, #moves {
+#score, #level, #target, #moves {
     font-size: 24px;
     font-weight: bold;
     color: var(--primary-color);

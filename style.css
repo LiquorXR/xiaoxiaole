@@ -115,8 +115,29 @@ header {
     z-index: 10;
 }
 
+.tile.super-tile {
+    background: radial-gradient(circle, #fff 0%, #ffd700 70%);
+    box-shadow: 0 0 10px #ffd700, inset 0 0 5px white;
+    animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow {
+    from { box-shadow: 0 0 5px #ffd700; }
+    to { box-shadow: 0 0 20px #ff0, 0 0 30px #f0f; }
+}
+
 .tile.match {
     animation: pop-out 0.3s forwards;
+}
+
+.tile.super-match {
+    animation: super-pop 0.5s forwards;
+}
+
+@keyframes super-pop {
+    0% { transform: scale(1); filter: brightness(1); }
+    50% { transform: scale(1.5); filter: brightness(2) hue-rotate(90deg); opacity: 0.8; }
+    100% { transform: scale(0); opacity: 0; }
 }
 
 @keyframes pop-out {

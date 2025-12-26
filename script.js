@@ -1,6 +1,8 @@
 const ROWS = 10;
 const COLS = 8;
 const ALL_TILE_TYPES = ['🍎', '🍇', '🍊', '🍋', '🥝', '🫐', '🍓', '🍑', '🍍'];
+const SUPER_TILE = '🌟'; // 超级方块标识
+const SUPER_TILE_CHANCE = 0.05; // 5% 概率出现
 const SCORE_PER_TILE = 1;
 
 let currentTileTypes = [];
@@ -72,11 +74,24 @@ function initGame() {
 }
 
 function startLevel(lvl) {
+    // 逻辑顺序调整：先处理上一关的溢出分
+    console.log(`Starting Level ${lvl}. Score before transition: ${score}, Old Target: ${target}`);
+    
+    let overflow = 0;
+    if (score >= target) {
+        overflow = score - target;
+        console.log(`Overflow detected: ${overflow}`);
+    }
+    
+    // 加载新配置
     const config = getLevelConfig(lvl);
     currentTileTypes = config.tileTypes;
     target = config.target;
     moves = config.moves;
-    score = 0; // 每关分数重置，挑战该关卡目标
+    
+    // 应用溢出分（如果有）
+    score = overflow;
+    console.log(`New Level ${lvl} started. Starting score: ${score}, Target: ${target}`);
     
     // 清除可能存在的下一关按钮
     const nextBtn = document.getElementById('next-level-btn');
@@ -276,11 +291,39 @@ function checkMatches() {
 async function processMatches() {
     let matches = checkMatches();
     while (matches.length > 0) {
+        // 检查是否有超级方块被匹配
+        let superTileMatched = false;
+        let superTileIndices = [];
+        
+        matches.forEach(idx => {
+            if (board[idx] === SUPER_TILE) {
+                superTileMatched = true;
+                superTileIndices.push(idx);
+            }
+        });
+
+        // 如果匹配到了超级方块，扩展匹配范围到整行整列
+        if (superTileMatched) {
+            let expandedMatches = new Set(matches);
+            superTileIndices.forEach(idx => {
+                const r = Math.floor(idx / COLS);
+                const c = idx % COLS;
+                // 整行
+                for (let i = 0; i < COLS; i++) expandedMatches.add(r * COLS + i);
+                // 整列
+                for (let i = 0; i < ROWS; i++) expandedMatches.add(i * COLS + c);
+            });
+            matches = Array.from(expandedMatches);
+        }
+
         // Animation
         matches.forEach(idx => {
             const el = tileElements[idx];
-            el.classList.add('match');
-            createParticles(idx);
+            if (el) {
+                el.classList.add('match');
+                if (board[idx] === SUPER_TILE) el.classList.add('super-match');
+                createParticles(idx);
+            }
         });
         await sleep(350);
         
@@ -330,13 +373,21 @@ function dropTiles() {
 function refillBoard() {
     for (let i = 0; i < ROWS * COLS; i++) {
         if (board[i] === null) {
-            const type = currentTileTypes[Math.floor(Math.random() * currentTileTypes.length)];
+            // 判定是否生成超级方块
+            let type;
+            if (Math.random() < SUPER_TILE_CHANCE) {
+                type = SUPER_TILE;
+            } else {
+                type = currentTileTypes[Math.floor(Math.random() * currentTileTypes.length)];
+            }
+            
             board[i] = type;
             
             const tileElement = document.createElement('div');
             tileElement.classList.add('tile');
             tileElement.dataset.index = i; // 修复：补充缺失的 index
             tileElement.innerText = type;
+            if (type === SUPER_TILE) tileElement.classList.add('super-tile');
             
             // Start from above the board for falling effect
             const x = i % COLS;
@@ -388,10 +439,15 @@ function updateUI() {
 }
 
 async function checkGameOver() {
+    console.log(`Checking game over. Score: ${score}, Target: ${target}`);
     if (score >= target) {
         // 过关逻辑
         document.getElementById('overlay-title').innerText = `恭喜过关！`;
-        document.getElementById('overlay-score').innerText = `本关得分: ${score}`;
+        // 显示本关总得分（包含溢出）
+        document.getElementById('overlay-score').innerText = `本关总得分: ${score}`;
+        
+        // 关键修复：在弹出过关界面前，不应重置 score，但在 startLevel 中会用到它
+        // 目前逻辑正确：score 保留了超过 target 的值，直到 startLevel(level + 1) 被调用
         
         if (!document.getElementById('next-level-btn')) {
             const nextBtn = document.createElement('button');

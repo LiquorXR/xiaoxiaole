@@ -160,6 +160,25 @@ function createBoard() {
 
 function handleStart(index, x, y) {
     if (isProcessing || moves <= 0 || isNaN(index)) return;
+
+    // 如果已经选中了一个方块，且点击的是另一个方块
+    if (selectedTile !== null && selectedTile !== index) {
+        const x1 = selectedTile % COLS;
+        const y1 = Math.floor(selectedTile / COLS);
+        const x2 = index % COLS;
+        const y2 = Math.floor(index / COLS);
+        
+        // 检查是否相邻
+        const isAdjacent = Math.abs(x1 - x2) + Math.abs(y1 - y2) === 1;
+        
+        if (isAdjacent) {
+            const prevSelected = selectedTile;
+            selectedTile = null; // 清除选中状态，防止与滑动逻辑冲突
+            swapTiles(prevSelected, index);
+            return;
+        }
+    }
+
     touchStartX = x;
     touchStartY = y;
     

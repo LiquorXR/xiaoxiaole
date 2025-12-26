@@ -55,8 +55,8 @@ function getLevelConfig(lvl) {
     const targetScore = 70 + (lvl - 1) * (35 + (lvl * 4));
     
     // 3. 初始步数：
-    // 基础步数 25步（适配较小棋盘），每6关减少1步，最低18步
-    const initialMoves = Math.max(18, 25 - Math.floor((lvl - 1) / 6));
+    // 每关递增 5 步，基础 25 步
+    const initialMoves = 25 + (lvl - 1) * 5;
 
     return {
         tileTypes: ALL_TILE_TYPES.slice(0, tileCount),

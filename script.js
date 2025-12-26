@@ -27,15 +27,35 @@ const overlay = document.getElementById('overlay');
 const restartBtn = document.getElementById('restart-btn');
 
 function getLevelConfig(lvl) {
-    // 难度随关卡增加：
-    // 1. 方块种类增加：起始3种，每2关增加1种，最多9种
-    const tileCount = Math.min(3 + Math.floor((lvl - 1) / 2), ALL_TILE_TYPES.length);
+    // 重新设计的平滑难度曲线：
     
-    // 2. 目标分数增加：基础100，每关增加 50 * level
-    const targetScore = 100 + (lvl - 1) * 50 * lvl;
+    // 1. 方块种类增加：
+    // 第1-3关: 4种 (简单，容易连击)
+    // 第4-7关: 5种
+    // 第8-12关: 6种
+    // 第13-18关: 7种
+    // 第19-25关: 8种
+    // 26关以上: 9种
+    let tileCount;
+    if (lvl <= 3) tileCount = 4;
+    else if (lvl <= 7) tileCount = 5;
+    else if (lvl <= 12) tileCount = 6;
+    else if (lvl <= 18) tileCount = 7;
+    else if (lvl <= 25) tileCount = 8;
+    else tileCount = 9;
     
-    // 3. 初始步数：基础30，随关卡略微减少，但最低不少于15步
-    const initialMoves = Math.max(15, 30 - Math.floor((lvl - 1) / 2));
+    // 2. 目标分数增加：平滑线性+小幅指数
+    // 基础分数 80，每关增加 40 + (lvl * 5)
+    // 第1关: 80
+    // 第2关: 130
+    // 第3关: 185
+    // 第5关: 315
+    // 第10关: 730
+    const targetScore = 80 + (lvl - 1) * (40 + (lvl * 5));
+    
+    // 3. 初始步数：
+    // 基础30步，每5关减少1步，最低20步
+    const initialMoves = Math.max(20, 30 - Math.floor((lvl - 1) / 5));
 
     return {
         tileTypes: ALL_TILE_TYPES.slice(0, tileCount),

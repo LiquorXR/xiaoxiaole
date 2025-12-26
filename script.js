@@ -1,4 +1,4 @@
-const ROWS = 12;
+const ROWS = 10;
 const COLS = 8;
 const ALL_TILE_TYPES = ['🍎', '🍇', '🍊', '🍋', '🥝', '🫐', '🍓', '🍑', '🍍'];
 const SCORE_PER_TILE = 1;
@@ -27,35 +27,36 @@ const overlay = document.getElementById('overlay');
 const restartBtn = document.getElementById('restart-btn');
 
 function getLevelConfig(lvl) {
-    // 重新设计的平滑难度曲线：
+    // 重新设计的平滑难度曲线（适配10行8列布局）：
     
     // 1. 方块种类增加：
-    // 第1-3关: 4种 (简单，容易连击)
-    // 第4-7关: 5种
-    // 第8-12关: 6种
-    // 第13-18关: 7种
-    // 第19-25关: 8种
-    // 26关以上: 9种
+    // 棋盘变小（12x8 -> 10x8），连击几率略微降低
+    // 第1-3关: 4种 (简单，容易熟悉)
+    // 第4-8关: 5种
+    // 第9-14关: 6种
+    // 第15-20关: 7种
+    // 第21-30关: 8种
+    // 31关以上: 9种
     let tileCount;
     if (lvl <= 3) tileCount = 4;
-    else if (lvl <= 7) tileCount = 5;
-    else if (lvl <= 12) tileCount = 6;
-    else if (lvl <= 18) tileCount = 7;
-    else if (lvl <= 25) tileCount = 8;
+    else if (lvl <= 8) tileCount = 5;
+    else if (lvl <= 14) tileCount = 6;
+    else if (lvl <= 20) tileCount = 7;
+    else if (lvl <= 30) tileCount = 8;
     else tileCount = 9;
     
-    // 2. 目标分数增加：平滑线性+小幅指数
-    // 基础分数 80，每关增加 40 + (lvl * 5)
-    // 第1关: 80
-    // 第2关: 130
-    // 第3关: 185
-    // 第5关: 315
-    // 第10关: 730
-    const targetScore = 80 + (lvl - 1) * (40 + (lvl * 5));
+    // 2. 目标分数增加：
+    // 由于格子减少了约16%，目标分数也相应微调，保持节奏
+    // 基础分数 70，每关增加 35 + (lvl * 4)
+    // 第1关: 70
+    // 第2关: 113
+    // 第3关: 161
+    // 第10关: 640
+    const targetScore = 70 + (lvl - 1) * (35 + (lvl * 4));
     
     // 3. 初始步数：
-    // 基础30步，每5关减少1步，最低20步
-    const initialMoves = Math.max(20, 30 - Math.floor((lvl - 1) / 5));
+    // 基础步数 25步（适配较小棋盘），每6关减少1步，最低18步
+    const initialMoves = Math.max(18, 25 - Math.floor((lvl - 1) / 6));
 
     return {
         tileTypes: ALL_TILE_TYPES.slice(0, tileCount),

@@ -21,7 +21,8 @@ body {
     height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    padding-top: 2vh;
     overflow: hidden;
     color: var(--text-color);
 }

@@ -79,15 +79,20 @@ function getLevelConfig(lvl) {
      * 第5关: 220
      * 第10关: 500
      */
-    const targetScore = 50 + (lvl - 1) * (30 + lvl * 5);
+    /**
+     * 2. 目标分数增长公式 (优化后)：
+     * 降低增长斜率，采用分段线性 + 基础增量。
+     * 第1关: 50
+     * 第10关: 500
+     * 第20关: 1200
+     */
+    const targetScore = 50 + (lvl - 1) * 50;
     
     /**
-     * 3. 初始步数逻辑：
-     * 初始 30 步 (比之前增加 5 步，提高容错)。
-     * 每过一关固定增加 2 步，而不是 5 步，防止后期步数过多导致冗长。
-     * 这种设计让前期更容易，后期步数也够用。
+     * 3. 初始步数逻辑 (优化后)：
+     * 设置初始 25 步，随关卡增加，但 40 步封顶。
      */
-    const initialMoves = 30 + (lvl - 1) * 2;
+    const initialMoves = Math.min(25 + (lvl - 1), 40);
 
     return {
         tileTypes: ALL_TILE_TYPES.slice(0, tileCount),
@@ -306,6 +311,91 @@ async function swapTiles(idx1, idx2) {
         isProcessing = false;
     }
     await checkGameOver();
+    
+    // 如果没有游戏结束且没有匹配，检查是否死局
+    if (moves > 0 && score < target && !checkHasPotentialMatch()) {
+        console.log("No moves left, shuffling...");
+        await shuffleBoard();
+    }
+}
+
+function checkHasPotentialMatch() {
+    for (let i = 0; i < ROWS * COLS; i++) {
+        const x = i % COLS;
+        const y = Math.floor(i / COLS);
+        const currentType = board[i];
+
+        // 尝试与右侧交换
+        if (x < COLS - 1) {
+            if (testSwap(i, i + 1)) return true;
+        }
+        // 尝试与下方交换
+        if (y < ROWS - 1) {
+            if (testSwap(i, i + COLS)) return true;
+        }
+    }
+    return false;
+}
+
+function testSwap(idx1, idx2) {
+    const type1 = board[idx1];
+    const type2 = board[idx2];
+    
+    // 模拟交换
+    board[idx1] = type2;
+    board[idx2] = type1;
+    
+    const matches = checkMatches();
+    
+    // 换回来
+    board[idx1] = type1;
+    board[idx2] = type2;
+    
+    return matches.length > 0;
+}
+
+async function shuffleBoard() {
+    isProcessing = true;
+    // 简单的洗牌逻辑：重新打乱数组并重新渲染
+    let valid = false;
+    while (!valid) {
+        for (let i = board.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [board[i], board[j]] = [board[j], board[i]];
+        }
+        // 确保洗牌后没有自动消除，且有潜在匹配
+        if (checkMatches().length === 0 && checkHasPotentialMatch()) {
+            valid = true;
+        }
+    }
+    
+    // 重新创建 DOM 元素或更新现有元素位置
+    gameBoard.innerHTML = '';
+    tileElements = [];
+    for (let i = 0; i < board.length; i++) {
+        const type = board[i];
+        const tileElement = document.createElement('div');
+        tileElement.classList.add('tile');
+        tileElement.dataset.index = i;
+        tileElement.innerText = type;
+        if (type === SUPER_TILE) tileElement.classList.add('super-tile');
+        
+        const pos = getTilePos(i);
+        tileElement.style.left = pos.left;
+        tileElement.style.top = pos.top;
+
+        tileElement.addEventListener('mousedown', (e) => handleStart(parseInt(e.currentTarget.dataset.index), e.clientX, e.clientY));
+        tileElement.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            handleStart(parseInt(e.currentTarget.dataset.index), touch.clientX, touch.clientY);
+        }, {passive: true});
+
+        gameBoard.appendChild(tileElement);
+        tileElements[i] = tileElement;
+    }
+    
+    isProcessing = false;
+    console.log("Board shuffled.");
 }
 
 function checkMatches() {

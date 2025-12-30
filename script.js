@@ -126,9 +126,6 @@ function startLevel(lvl) {
     const nextBtn = document.getElementById('next-level-btn');
     if (nextBtn) nextBtn.remove();
     
-    // 清除可能存在的“回到第1关”按钮
-    const backBtn = document.getElementById('back-to-main-btn');
-    if (backBtn) backBtn.remove();
     
     // 设置重新开始按钮为“重新挑战”并绑定当前关卡
     restartBtn.innerText = lvl === 1 ? "重新开始" : "重新挑战";
@@ -535,20 +532,6 @@ function endGame(message) {
     restartBtn.innerText = "重新挑战";
     restartBtn.onclick = () => startLevel(level);
     
-    // 添加一个回到第1关的按钮，方便用户想彻底重来时使用
-    if (!document.getElementById('back-to-main-btn')) {
-        const backBtn = document.createElement('button');
-        backBtn.id = 'back-to-main-btn';
-        backBtn.innerText = '回到第1关';
-        backBtn.onclick = () => {
-            if (userData) {
-                userData.level = 1;
-                saveUserData();
-            }
-            initGame();
-        };
-        restartBtn.parentNode.appendChild(backBtn);
-    }
     
     restartBtn.classList.remove('hidden');
     overlay.classList.remove('hidden');

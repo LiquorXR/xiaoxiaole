@@ -128,11 +128,9 @@ function startLevel(lvl) {
     console.log(`Starting Level ${lvl}. Score before transition: ${score}, Old Target: ${target}`);
     
     let overflow = 0;
-    let remainingMoves = 0;
     if (score >= target) {
         overflow = score - target;
-        remainingMoves = Math.max(0, moves);
-        console.log(`Overflow detected: ${overflow}, Remaining moves: ${remainingMoves}`);
+        console.log(`Overflow detected: ${overflow}`);
     }
     
     // 加载新配置
@@ -140,8 +138,8 @@ function startLevel(lvl) {
     currentTileTypes = config.tileTypes;
     currentSuperTileChance = config.superTileChance;
     target = config.target;
-    // 叠加步数
-    moves = config.moves + remainingMoves;
+    // 重置步数（不再叠加上一关剩余步数）
+    moves = config.moves;
     
     // 应用溢出分（如果有）
     score = overflow;

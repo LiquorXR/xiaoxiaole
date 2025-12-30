@@ -622,6 +622,8 @@ async function registerToServer(username, password) {
             showAuthMsg('注册成功！正在进入...', 'success');
             currentUser = username;
             userData = { level: 1, totalScore: 0 };
+            // 立即同步到服务器，确保数据库中不是 null
+            saveUserData();
             // 持久化存储
             localStorage.setItem('game_user', currentUser);
             setTimeout(enterGame, 1000);
@@ -707,8 +709,8 @@ async function updateRankUI() {
             <div class="rank-item">
                 <span class="rank-index">${index + 1}</span>
                 <span class="rank-name">${item.name}</span>
-                <span class="rank-level">第 ${item.level} 关</span>
-                <span class="rank-score">${item.score}</span>
+                <span class="rank-level">第 ${item.level || 1} 关</span>
+                <span class="rank-score">${item.score !== null ? item.score : 0}</span>
             </div>
         `).join('');
     } catch (e) {

@@ -614,12 +614,6 @@ authSubmitBtn.onclick = () => {
             return;
         }
         
-        // 检查用户是否存在
-        if (localStorage.getItem(`auth_${username}`)) {
-            showAuthMsg('该昵称已被占用', 'error');
-            return;
-        }
-
         // 注册用户
         registerToServer(username, password);
     } else {

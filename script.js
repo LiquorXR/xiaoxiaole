@@ -813,17 +813,14 @@ async function updateRankUI() {
 async function checkAutoLogin() {
     const savedUser = localStorage.getItem('game_user');
     if (savedUser) {
+        // 如果有保存的用户，先隐藏登录界面，避免刷新时的视觉闪烁
+        loginScreen.classList.add('hidden');
+        
         try {
-            // 这里可以添加一个简单的接口来验证用户并获取最新进度
-            // 为了简化，我们直接尝试加载进度。如果用户不存在或出错，则清除存储。
             const res = await fetch('/api/login', {
                 method: 'POST',
                 body: JSON.stringify({ username: savedUser, isAutoLogin: true })
             });
-            // 注意：我们需要修改后端的 login.js 以支持不需要密码的自动登录（或简单信任 localStorage）
-            // 在实际项目中，这里应该使用 Token (JWT)。
-            // 目前方案：再次请求 login 接口，如果没有密码字段，后端需要做相应处理。
-            // 但为了最快实现，我们可以直接读取该用户的进度。
             
             const data = await res.json();
             if (res.ok) {
@@ -832,9 +829,11 @@ async function checkAutoLogin() {
                 enterGame();
             } else {
                 localStorage.removeItem('game_user');
+                loginScreen.classList.remove('hidden');
             }
         } catch (e) {
             console.error('Auto login failed', e);
+            loginScreen.classList.remove('hidden');
         }
     }
 }

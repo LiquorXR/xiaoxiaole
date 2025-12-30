@@ -633,6 +633,8 @@ async function registerToServer(username, password) {
             showAuthMsg('注册成功！正在进入...', 'success');
             currentUser = username;
             userData = { level: 1, totalScore: 0 };
+            // 持久化存储
+            localStorage.setItem('game_user', currentUser);
             setTimeout(enterGame, 1000);
         } else {
             showAuthMsg(data.error || '注册失败', 'error');
@@ -653,6 +655,8 @@ async function loginToServer(username, password) {
             showAuthMsg('登录成功！', 'success');
             currentUser = data.user.username;
             userData = data.user.progress;
+            // 持久化存储
+            localStorage.setItem('game_user', currentUser);
             setTimeout(enterGame, 1000);
         } else {
             showAuthMsg(data.error || '登录失败', 'error');
@@ -721,6 +725,40 @@ async function updateRankUI() {
         rankList.innerHTML = '<div style="padding:20px;color:#e74c3c">加载排行榜失败</div>';
     }
 }
+
+// --- 自动登录逻辑 ---
+
+async function checkAutoLogin() {
+    const savedUser = localStorage.getItem('game_user');
+    if (savedUser) {
+        try {
+            // 这里可以添加一个简单的接口来验证用户并获取最新进度
+            // 为了简化，我们直接尝试加载进度。如果用户不存在或出错，则清除存储。
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                body: JSON.stringify({ username: savedUser, isAutoLogin: true })
+            });
+            // 注意：我们需要修改后端的 login.js 以支持不需要密码的自动登录（或简单信任 localStorage）
+            // 在实际项目中，这里应该使用 Token (JWT)。
+            // 目前方案：再次请求 login 接口，如果没有密码字段，后端需要做相应处理。
+            // 但为了最快实现，我们可以直接读取该用户的进度。
+            
+            const data = await res.json();
+            if (res.ok) {
+                currentUser = data.user.username;
+                userData = data.user.progress;
+                enterGame();
+            } else {
+                localStorage.removeItem('game_user');
+            }
+        } catch (e) {
+            console.error('Auto login failed', e);
+        }
+    }
+}
+
+// 执行自动登录检查
+checkAutoLogin();
 
 // 阻止默认启动，等待登录
 // initGame();

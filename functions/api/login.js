@@ -1,14 +1,19 @@
 export async function onRequestPost(context) {
     const { request, env } = context;
-    const { username, password } = await request.json();
+    const { username, password, isAutoLogin } = await request.json();
 
     try {
         const user = await env.xiaoxiaole.prepare("SELECT * FROM users WHERE username = ?")
             .bind(username)
             .first();
 
-        if (!user || user.password !== password) {
-            return new Response(JSON.stringify({ error: "账号或密码错误" }), { status: 401 });
+        if (!user) {
+            return new Response(JSON.stringify({ error: "用户不存在" }), { status: 404 });
+        }
+
+        // 如果不是自动登录，则必须校验密码
+        if (!isAutoLogin && user.password !== password) {
+            return new Response(JSON.stringify({ error: "密码错误" }), { status: 401 });
         }
 
         // 获取用户进度

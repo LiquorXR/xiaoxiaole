@@ -14,6 +14,29 @@ let target = 100;
 let level = 1;
 let selectedTile = null;
 let isProcessing = false;
+let currentUser = null;
+let userData = {
+    level: 1,
+    totalScore: 0,
+    history: []
+};
+
+// UI Elements for Login and Ranking
+const loginScreen = document.getElementById('login-screen');
+const rankScreen = document.getElementById('rank-screen');
+const authTitle = document.getElementById('auth-title');
+const authTabLogin = document.getElementById('tab-login');
+const authTabRegister = document.getElementById('tab-register');
+const authUsernameInput = document.getElementById('auth-username');
+const authPasswordInput = document.getElementById('auth-password');
+const authConfirmPasswordInput = document.getElementById('auth-confirm-password');
+const confirmPasswordGroup = document.getElementById('confirm-password-group');
+const authSubmitBtn = document.getElementById('auth-submit-btn');
+const authMsg = document.getElementById('auth-msg');
+
+const showRankBtn = document.getElementById('show-rank-btn');
+const closeRankBtn = document.getElementById('close-rank-btn');
+const rankList = document.getElementById('rank-list');
 
 // Touch handling
 let touchStartX = 0;
@@ -474,6 +497,12 @@ async function checkGameOver() {
             nextBtn.innerText = `进入第 ${level + 1} 关`;
             nextBtn.onclick = () => {
                 level++;
+                // 更新进度并存盘
+                if (userData) {
+                    userData.level = level;
+                    userData.totalScore += score;
+                    saveUserData();
+                }
                 startLevel(level);
             };
             
@@ -505,7 +534,13 @@ function endGame(message) {
         const backBtn = document.createElement('button');
         backBtn.id = 'back-to-main-btn';
         backBtn.innerText = '回到第1关';
-        backBtn.onclick = initGame;
+        backBtn.onclick = () => {
+            if (userData) {
+                userData.level = 1;
+                saveUserData();
+            }
+            initGame();
+        };
         restartBtn.parentNode.appendChild(backBtn);
     }
     
@@ -539,4 +574,159 @@ function createParticles(index) {
 
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
-initGame();
+// --- UI Logic ---
+
+let authMode = 'login'; // 'login' or 'register'
+
+authTabLogin.onclick = () => {
+    authMode = 'login';
+    authTabLogin.classList.add('active');
+    authTabRegister.classList.remove('active');
+    authTitle.innerText = '欢迎登录';
+    confirmPasswordGroup.classList.add('hidden');
+    authMsg.innerText = '';
+    authSubmitBtn.innerText = '立即进入';
+};
+
+authTabRegister.onclick = () => {
+    authMode = 'register';
+    authTabRegister.classList.add('active');
+    authTabLogin.classList.remove('active');
+    authTitle.innerText = '新玩家注册';
+    confirmPasswordGroup.classList.remove('hidden');
+    authMsg.innerText = '';
+    authSubmitBtn.innerText = '创建账号';
+};
+
+authSubmitBtn.onclick = () => {
+    const username = authUsernameInput.value.trim();
+    const password = authPasswordInput.value;
+    const confirmPassword = authConfirmPasswordInput.value;
+
+    if (!username || !password) {
+        showAuthMsg('请输入账号和密码', 'error');
+        return;
+    }
+
+    if (authMode === 'register') {
+        if (password !== confirmPassword) {
+            showAuthMsg('两次输入的密码不一致', 'error');
+            return;
+        }
+        
+        // 检查用户是否存在
+        if (localStorage.getItem(`auth_${username}`)) {
+            showAuthMsg('该昵称已被占用', 'error');
+            return;
+        }
+
+        // 注册用户
+        registerToServer(username, password);
+    } else {
+        // 登录逻辑
+        loginToServer(username, password);
+    }
+};
+
+async function registerToServer(username, password) {
+    try {
+        const res = await fetch('/api/register', {
+            method: 'POST',
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showAuthMsg('注册成功！正在进入...', 'success');
+            currentUser = username;
+            userData = { level: 1, totalScore: 0 };
+            setTimeout(enterGame, 1000);
+        } else {
+            showAuthMsg(data.error || '注册失败', 'error');
+        }
+    } catch (e) {
+        showAuthMsg('网络错误，请稍后再试', 'error');
+    }
+}
+
+async function loginToServer(username, password) {
+    try {
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showAuthMsg('登录成功！', 'success');
+            currentUser = data.user.username;
+            userData = data.user.progress;
+            setTimeout(enterGame, 1000);
+        } else {
+            showAuthMsg(data.error || '登录失败', 'error');
+        }
+    } catch (e) {
+        showAuthMsg('网络错误，请稍后再试', 'error');
+    }
+}
+
+function showAuthMsg(text, type) {
+    authMsg.innerText = text;
+    authMsg.className = 'auth-msg ' + type;
+}
+
+function enterGame() {
+    loginScreen.classList.add('hidden');
+    level = userData.level || 1;
+    score = 0;
+    startLevel(level);
+}
+
+showRankBtn.onclick = () => {
+    updateRankUI();
+    rankScreen.classList.remove('hidden');
+};
+
+closeRankBtn.onclick = () => {
+    rankScreen.classList.add('hidden');
+};
+
+async function saveUserData() {
+    if (currentUser) {
+        try {
+            await fetch('/api/save_progress', {
+                method: 'POST',
+                body: JSON.stringify({
+                    username: currentUser,
+                    level: userData.level,
+                    score: userData.totalScore
+                })
+            });
+        } catch (e) {
+            console.error('Failed to save progress to server', e);
+        }
+    }
+}
+
+async function updateRankUI() {
+    try {
+        const res = await fetch('/api/rank');
+        const ranks = await res.json();
+        
+        if (!ranks || ranks.length === 0) {
+            rankList.innerHTML = '<div style="padding:20px;color:#999">暂无数据</div>';
+            return;
+        }
+
+        rankList.innerHTML = ranks.map((item, index) => `
+            <div class="rank-item">
+                <span class="rank-index">${index + 1}</span>
+                <span class="rank-name">${item.name}</span>
+                <span class="rank-score">${item.score}</span>
+            </div>
+        `).join('');
+    } catch (e) {
+        rankList.innerHTML = '<div style="padding:20px;color:#e74c3c">加载排行榜失败</div>';
+    }
+}
+
+// 阻止默认启动，等待登录
+// initGame();

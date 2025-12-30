@@ -7,6 +7,45 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- 登录界面 -->
+    <div id="login-screen" class="full-screen-overlay">
+        <div class="modal" id="auth-modal">
+            <h1 id="auth-title">欢迎登录</h1>
+            
+            <div class="auth-tabs">
+                <button id="tab-login" class="auth-tab active">登录</button>
+                <button id="tab-register" class="auth-tab">注册</button>
+            </div>
+
+            <div class="input-group">
+                <input type="text" id="auth-username" placeholder="请输入昵称" maxlength="10">
+            </div>
+            
+            <div class="input-group">
+                <input type="password" id="auth-password" placeholder="请输入密码">
+            </div>
+
+            <div class="input-group hidden" id="confirm-password-group">
+                <input type="password" id="auth-confirm-password" placeholder="请再次输入密码">
+            </div>
+
+            <button id="auth-submit-btn" class="primary-btn">立即进入</button>
+            
+            <p id="auth-msg" class="auth-msg"></p>
+        </div>
+    </div>
+
+    <!-- 排行榜界面 -->
+    <div id="rank-screen" class="full-screen-overlay hidden">
+        <div class="modal">
+            <h2>强力榜单</h2>
+            <div id="rank-list" class="rank-list">
+                <!-- 排行榜项将通过 JS 动态生成 -->
+            </div>
+            <button id="close-rank-btn" class="secondary-btn">返回游戏</button>
+        </div>
+    </div>
+
     <div id="game-container">
         <header>
             <div class="stat-item">
@@ -41,6 +80,9 @@
         <footer>
             <div class="progress-container">
                 <div id="progress-bar" style="width: 0%"></div>
+            </div>
+            <div class="footer-btns">
+                <button id="show-rank-btn">排行榜</button>
             </div>
         </footer>
     </div>

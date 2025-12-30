@@ -6,7 +6,7 @@ export async function onRequestPost(context) {
         const { oldUsername, newUsername, newPassword } = body;
 
         if (!oldUsername || !newUsername) {
-            return new Response(JSON.stringify({ error: "参数不足: oldUsername 或 newUsername 缺失" }), { 
+            return new Response(JSON.stringify({ error: "请求参数不完整" }), { 
                 status: 400,
                 headers: { "Content-Type": "application/json" }
             });
@@ -18,63 +18,63 @@ export async function onRequestPost(context) {
             .first();
             
         if (!user) {
-            return new Response(JSON.stringify({ error: `用户 "${oldUsername}" 不存在` }), { 
+            return new Response(JSON.stringify({ error: `未找到用户: ${oldUsername}` }), { 
                 status: 404,
                 headers: { "Content-Type": "application/json" }
             });
         }
 
-        // 2. 如果修改了用户名，检查新用户名是否已存在
-        if (oldUsername !== newUsername) {
+        // 2. 准备 SQL
+        const hasPassword = newPassword && newPassword.trim() !== "";
+        let userQuery, userParams;
+
+        if (hasPassword) {
+            userQuery = "UPDATE users SET username = ?, password = ? WHERE username = ?";
+            userParams = [newUsername, newPassword, oldUsername];
+        } else {
+            userQuery = "UPDATE users SET username = ? WHERE username = ?";
+            userParams = [newUsername, oldUsername];
+        }
+
+        // 3. 执行更新
+        if (oldUsername === newUsername) {
+            // 仅修改密码或未做改动
+            await env.xiaoxiaole.prepare(userQuery).bind(...userParams).run();
+        } else {
+            // 修改了用户名，需要考虑外键约束
+            // 检查新用户名是否冲突
             const existing = await env.xiaoxiaole.prepare("SELECT username FROM users WHERE username = ?")
                 .bind(newUsername)
                 .first();
             if (existing) {
-                return new Response(JSON.stringify({ error: "新昵称已被占用" }), { 
+                return new Response(JSON.stringify({ error: "该新昵称已被其他玩家占用" }), { 
                     status: 400,
                     headers: { "Content-Type": "application/json" }
                 });
             }
-        }
 
-        // 3. 准备执行更新
-        // 由于 Cloudflare D1 的 batch 在处理带有外键关系的更新时可能遇到顺序检查问题，
-        // 且默认情况下 D1 的外键检查是禁用的，我们这里使用顺序执行或确保事务正确。
-        
-        // 更新用户信息
-        let userQuery = "UPDATE users SET username = ?";
-        let userParams = [newUsername];
-        if (newPassword && newPassword.trim() !== "") {
-            userQuery += ", password = ?";
-            userParams.push(newPassword);
-        }
-        userQuery += " WHERE username = ?";
-        userParams.push(oldUsername);
-        
-        // 如果用户名没变，只需要更新用户表
-        if (oldUsername === newUsername) {
-            await env.xiaoxiaole.prepare(userQuery).bind(...userParams).run();
-        } else {
-            // 如果用户名变了，需要同步更新进度表
-            // 使用 batch 确保原子性
+            // 使用 batch 执行，并尝试临时关闭外键约束（如果已开启）
+            // 注意：D1 的 batch 会在同一个事务中运行
             await env.xiaoxiaole.batch([
+                env.xiaoxiaole.prepare("PRAGMA foreign_keys = OFF"),
                 env.xiaoxiaole.prepare(userQuery).bind(...userParams),
-                env.xiaoxiaole.prepare("UPDATE user_progress SET username = ? WHERE username = ?")
-                    .bind(newUsername, oldUsername)
+                env.xiaoxiaole.prepare("UPDATE user_progress SET username = ? WHERE username = ?").bind(newUsername, oldUsername),
+                env.xiaoxiaole.prepare("PRAGMA foreign_keys = ON")
             ]);
         }
 
         return new Response(JSON.stringify({ 
             success: true,
-            message: "资料更新成功" 
+            message: "修改成功" 
         }), {
             headers: { "Content-Type": "application/json" }
         });
     } catch (e) {
+        // 返回详细错误信息以供调试
         return new Response(JSON.stringify({ 
-            error: "服务器内部错误", 
-            details: e.message,
-            stack: e.stack
+            error: "操作失败", 
+            message: e.message,
+            stack: e.stack 
         }), { 
             status: 500,
             headers: { "Content-Type": "application/json" }

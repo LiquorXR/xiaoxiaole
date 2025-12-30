@@ -108,13 +108,21 @@ header {
     background: white;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    transition: left 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                top 0.4s cubic-bezier(0.5, 1.5, 0.5, 1),
+                transform 0.2s,
+                opacity 0.3s;
     user-select: none;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .tile:active {
     transform: scale(0.9);
+}
+
+.tile.swapping {
+    z-index: 20;
+    transform: scale(1.1);
 }
 
 .tile.selected {
@@ -135,23 +143,38 @@ header {
 }
 
 .tile.match {
-    animation: pop-out 0.3s forwards;
+    animation: pop-out 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .tile.super-match {
-    animation: super-pop 0.5s forwards;
+    animation: super-pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 @keyframes super-pop {
     0% { transform: scale(1); filter: brightness(1); }
-    50% { transform: scale(1.5); filter: brightness(2) hue-rotate(90deg); opacity: 0.8; }
-    100% { transform: scale(0); opacity: 0; }
+    30% { transform: scale(1.4) rotate(15deg); filter: brightness(2) hue-rotate(90deg); }
+    100% { transform: scale(0) rotate(-45deg); opacity: 0; }
 }
 
 @keyframes pop-out {
     0% { transform: scale(1); }
-    50% { transform: scale(1.2); opacity: 0.8; }
+    40% { transform: scale(1.3); opacity: 0.9; }
     100% { transform: scale(0); opacity: 0; }
+}
+
+.tile.dropping {
+    transition: top 0.4s cubic-bezier(0.5, 1.5, 0.5, 1);
+}
+
+.game-board-shake {
+    animation: board-shake 0.4s screen;
+}
+
+@keyframes board-shake {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-4px, 4px); }
+    50% { transform: translate(4px, -4px); }
+    75% { transform: translate(-4px, -4px); }
 }
 
 .particle {

@@ -304,9 +304,15 @@ async function swapTiles(idx1, idx2) {
     tileElements[idx1] = tileElements[idx2];
     tileElements[idx2] = tempElem;
 
+    if (tileElements[idx1]) tileElements[idx1].classList.add('swapping');
+    if (tileElements[idx2]) tileElements[idx2].classList.add('swapping');
+
     renderBoardPositions();
     
-    await sleep(300);
+    await sleep(350);
+
+    if (tileElements[idx1]) tileElements[idx1].classList.remove('swapping');
+    if (tileElements[idx2]) tileElements[idx2].classList.remove('swapping');
 
     const matches = checkMatches();
     if (matches.length > 0) {
@@ -319,8 +325,15 @@ async function swapTiles(idx1, idx2) {
         board[idx1] = tempType;
         tileElements[idx2] = tileElements[idx1];
         tileElements[idx1] = tempElem;
+        
+        if (tileElements[idx1]) tileElements[idx1].classList.add('swapping');
+        if (tileElements[idx2]) tileElements[idx2].classList.add('swapping');
+        
         renderBoardPositions();
-        await sleep(300);
+        await sleep(350);
+        
+        if (tileElements[idx1]) tileElements[idx1].classList.remove('swapping');
+        if (tileElements[idx2]) tileElements[idx2].classList.remove('swapping');
     }
     
     } catch (error) {
@@ -469,37 +482,53 @@ async function processMatches() {
             matches = Array.from(expandedMatches);
         }
 
-        // Animation
-        matches.forEach(idx => {
-            const el = tileElements[idx];
-            if (el) {
-                el.classList.add('match');
-                if (board[idx] === SUPER_TILE) el.classList.add('super-match');
-                createParticles(idx);
-            }
+        // 大规模消除时的震屏效果
+        if (matches.length >= 6) {
+            gameBoard.classList.add('game-board-shake');
+            setTimeout(() => gameBoard.classList.remove('game-board-shake'), 400);
+        }
+
+        // Animation - 带有轻微延迟的序贯动画
+        const animationPromises = matches.map((idx, i) => {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    const el = tileElements[idx];
+                    if (el) {
+                        el.classList.add('match');
+                        if (board[idx] === SUPER_TILE) el.classList.add('super-match');
+                        createParticles(idx);
+                    }
+                    resolve();
+                }, i * 30); // 每个方块延迟 30ms 触发，产生序贯感
+            });
         });
-        await sleep(350);
+
+        await Promise.all(animationPromises);
+        await sleep(400);
         
         score += matches.length * SCORE_PER_TILE;
         updateUI();
         
         // Remove
         matches.forEach(idx => {
-            tileElements[idx].remove();
+            if (tileElements[idx]) {
+                tileElements[idx].remove();
+                tileElements[idx] = null;
+            }
             board[idx] = null;
-            tileElements[idx] = null;
         });
         
-        await sleep(100);
+        await sleep(50);
         
         // Drop
         dropTiles();
         renderBoardPositions();
-        await sleep(300);
+        // 根据掉落距离动态调整等待时间，或者统一等待动画完成
+        await sleep(450);
         
         // Refill
         refillBoard();
-        await sleep(300);
+        await sleep(450);
         
         matches = checkMatches();
     }
@@ -508,13 +537,22 @@ async function processMatches() {
 function dropTiles() {
     for (let x = 0; x < COLS; x++) {
         let emptySpot = -1;
+        let dropDistance = 0;
         for (let y = ROWS - 1; y >= 0; y--) {
             const idx = y * COLS + x;
             if (board[idx] === null) {
                 if (emptySpot === -1) emptySpot = y;
+                dropDistance++;
             } else if (emptySpot !== -1) {
-                board[emptySpot * COLS + x] = board[idx];
-                tileElements[emptySpot * COLS + x] = tileElements[idx];
+                const targetIdx = emptySpot * COLS + x;
+                board[targetIdx] = board[idx];
+                tileElements[targetIdx] = tileElements[idx];
+                
+                // 给正在掉落的元素添加一个特定的过渡延迟，产生一种“波浪式”下落感
+                if (tileElements[targetIdx]) {
+                    tileElements[targetIdx].style.transitionDelay = `${(ROWS - y) * 20}ms`;
+                }
+                
                 board[idx] = null;
                 tileElements[idx] = null;
                 emptySpot--;
@@ -562,11 +600,12 @@ function refillBoard() {
             gameBoard.appendChild(tileElement);
             tileElements[i] = tileElement;
             
-            // Trigger transition
+            // Trigger transition with stagger
+            const row = Math.floor(i / COLS);
             setTimeout(() => {
                 tileElement.style.top = getTilePos(i).top;
                 tileElement.style.opacity = '1';
-            }, 10);
+            }, 50 + (ROWS - row) * 30);
         }
     }
 }
@@ -575,9 +614,16 @@ function renderBoardPositions() {
     tileElements.forEach((el, i) => {
         if (el) {
             const pos = getTilePos(i);
-            el.style.left = pos.left;
-            el.style.top = pos.top;
+            // 只有在位置真的发生变化时才触发过渡
+            if (el.style.left !== pos.left || el.style.top !== pos.top) {
+                el.style.left = pos.left;
+                el.style.top = pos.top;
+            }
             el.dataset.index = i;
+            // 渲染后清除延迟，以免影响后续交互（如交换）
+            setTimeout(() => {
+                if (el) el.style.transitionDelay = '0ms';
+            }, 500);
         }
     });
 }
@@ -647,17 +693,29 @@ function endGame(message) {
 
 function createParticles(index) {
     const pos = getTilePos(index);
-    const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff'];
+    // 使用更亮丽、更匹配方块色彩的颜色
+    const colors = ['#FF5252', '#FFEB3B', '#2196F3', '#4CAF50', '#FF9800', '#E91E63', '#9C27B0'];
     
-    for (let i = 0; i < 8; i++) {
+    const particleCount = 12; // 增加粒子数量
+    for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.className = 'particle';
         particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        particle.style.left = `calc(${pos.left} + var(--tile-size) / 2)`;
-        particle.style.top = `calc(${pos.top} + var(--tile-size) / 2)`;
+        
+        // 随机初始偏移，让爆炸更自然
+        const offsetX = (Math.random() - 0.5) * 20;
+        const offsetY = (Math.random() - 0.5) * 20;
+        
+        particle.style.left = `calc(${pos.left} + var(--tile-size) / 2 + ${offsetX}px)`;
+        particle.style.top = `calc(${pos.top} + var(--tile-size) / 2 + ${offsetY}px)`;
+        
+        // 随机大小
+        const size = Math.random() * 6 + 4;
+        particle.style.width = size + 'px';
+        particle.style.height = size + 'px';
         
         const angle = Math.random() * Math.PI * 2;
-        const velocity = 50 + Math.random() * 50;
+        const velocity = 60 + Math.random() * 80;
         const dx = Math.cos(angle) * velocity + 'px';
         const dy = Math.sin(angle) * velocity + 'px';
         
@@ -665,7 +723,11 @@ function createParticles(index) {
         particle.style.setProperty('--dy', dy);
         
         gameBoard.appendChild(particle);
-        setTimeout(() => particle.remove(), 600);
+        
+        // 使用更平滑的移除方式
+        particle.addEventListener('animationend', () => particle.remove());
+        // 保险起见，设置超时移除
+        setTimeout(() => { if(particle.parentNode) particle.remove(); }, 700);
     }
 }
 

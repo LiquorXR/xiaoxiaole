@@ -1,15 +1,23 @@
 export async function onRequestPost(context) {
     const { request, env } = context;
-    const { oldUsername, newUsername, newPassword } = await request.json();
-
-    if (!oldUsername || !newUsername) {
-        return new Response(JSON.stringify({ error: "参数不足" }), { status: 400 });
-    }
-
+    
     try {
-        // 1. 开启事务 (D1 暂不支持显式事务 onRequest 作用域，我们按顺序执行)
-        
-        // 如果修改了用户名，检查新用户名是否已存在
+        const { oldUsername, newUsername, newPassword } = await request.json();
+
+        if (!oldUsername || !newUsername) {
+            return new Response(JSON.stringify({ error: "参数不足" }), { status: 400 });
+        }
+
+        // 1. 检查旧用户是否存在
+        const user = await env.xiaoxiaole.prepare("SELECT username FROM users WHERE username = ?")
+            .bind(oldUsername)
+            .first();
+            
+        if (!user) {
+            return new Response(JSON.stringify({ error: "用户不存在" }), { status: 404 });
+        }
+
+        // 2. 如果修改了用户名，检查新用户名是否已存在
         if (oldUsername !== newUsername) {
             const existing = await env.xiaoxiaole.prepare("SELECT username FROM users WHERE username = ?")
                 .bind(newUsername)
@@ -19,29 +27,42 @@ export async function onRequestPost(context) {
             }
         }
 
-        // 2. 更新用户信息
+        // 3. 准备批处理更新
+        const batch = [];
+        
+        // 更新用户信息
         let userQuery = "UPDATE users SET username = ?";
-        let params = [newUsername];
+        let userParams = [newUsername];
         if (newPassword && newPassword.trim() !== "") {
             userQuery += ", password = ?";
-            params.push(newPassword);
+            userParams.push(newPassword);
         }
         userQuery += " WHERE username = ?";
-        params.push(oldUsername);
+        userParams.push(oldUsername);
+        
+        batch.push(env.xiaoxiaole.prepare(userQuery).bind(...userParams));
 
-        await env.xiaoxiaole.prepare(userQuery).bind(...params).run();
-
-        // 3. 如果用户名变了，同步更新进度表和排行榜（如果有外键联级则不需要，但为了稳妥手动更新）
+        // 如果用户名变了，同步更新进度表
         if (oldUsername !== newUsername) {
-            await env.xiaoxiaole.prepare("UPDATE user_progress SET username = ? WHERE username = ?")
-                .bind(newUsername, oldUsername)
-                .run();
+            batch.push(env.xiaoxiaole.prepare("UPDATE user_progress SET username = ? WHERE username = ?")
+                .bind(newUsername, oldUsername));
         }
 
-        return new Response(JSON.stringify({ success: true }), {
+        // 执行批处理
+        const results = await env.xiaoxiaole.batch(batch);
+        
+        // 检查更新是否成功
+        if (results[0].meta.changes === 0) {
+            return new Response(JSON.stringify({ error: "更新失败，未找到匹配用户" }), { status: 400 });
+        }
+
+        return new Response(JSON.stringify({ 
+            success: true,
+            message: "资料更新成功" 
+        }), {
             headers: { "Content-Type": "application/json" }
         });
     } catch (e) {
-        return new Response(JSON.stringify({ error: "更新失败: " + e.message }), { status: 500 });
+        return new Response(JSON.stringify({ error: "服务器内部错误: " + e.message }), { status: 500 });
     }
 }

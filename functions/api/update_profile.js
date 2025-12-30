@@ -2,10 +2,14 @@ export async function onRequestPost(context) {
     const { request, env } = context;
     
     try {
-        const { oldUsername, newUsername, newPassword } = await request.json();
+        const body = await request.json();
+        const { oldUsername, newUsername, newPassword } = body;
 
         if (!oldUsername || !newUsername) {
-            return new Response(JSON.stringify({ error: "参数不足" }), { status: 400 });
+            return new Response(JSON.stringify({ error: "参数不足: oldUsername 或 newUsername 缺失" }), { 
+                status: 400,
+                headers: { "Content-Type": "application/json" }
+            });
         }
 
         // 1. 检查旧用户是否存在
@@ -14,7 +18,10 @@ export async function onRequestPost(context) {
             .first();
             
         if (!user) {
-            return new Response(JSON.stringify({ error: "用户不存在" }), { status: 404 });
+            return new Response(JSON.stringify({ error: `用户 "${oldUsername}" 不存在` }), { 
+                status: 404,
+                headers: { "Content-Type": "application/json" }
+            });
         }
 
         // 2. 如果修改了用户名，检查新用户名是否已存在
@@ -23,12 +30,16 @@ export async function onRequestPost(context) {
                 .bind(newUsername)
                 .first();
             if (existing) {
-                return new Response(JSON.stringify({ error: "新昵称已被占用" }), { status: 400 });
+                return new Response(JSON.stringify({ error: "新昵称已被占用" }), { 
+                    status: 400,
+                    headers: { "Content-Type": "application/json" }
+                });
             }
         }
 
-        // 3. 准备批处理更新
-        const batch = [];
+        // 3. 准备执行更新
+        // 由于 Cloudflare D1 的 batch 在处理带有外键关系的更新时可能遇到顺序检查问题，
+        // 且默认情况下 D1 的外键检查是禁用的，我们这里使用顺序执行或确保事务正确。
         
         // 更新用户信息
         let userQuery = "UPDATE users SET username = ?";
@@ -40,20 +51,17 @@ export async function onRequestPost(context) {
         userQuery += " WHERE username = ?";
         userParams.push(oldUsername);
         
-        batch.push(env.xiaoxiaole.prepare(userQuery).bind(...userParams));
-
-        // 如果用户名变了，同步更新进度表
-        if (oldUsername !== newUsername) {
-            batch.push(env.xiaoxiaole.prepare("UPDATE user_progress SET username = ? WHERE username = ?")
-                .bind(newUsername, oldUsername));
-        }
-
-        // 执行批处理
-        const results = await env.xiaoxiaole.batch(batch);
-        
-        // 检查更新是否成功
-        if (results[0].meta.changes === 0) {
-            return new Response(JSON.stringify({ error: "更新失败，未找到匹配用户" }), { status: 400 });
+        // 如果用户名没变，只需要更新用户表
+        if (oldUsername === newUsername) {
+            await env.xiaoxiaole.prepare(userQuery).bind(...userParams).run();
+        } else {
+            // 如果用户名变了，需要同步更新进度表
+            // 使用 batch 确保原子性
+            await env.xiaoxiaole.batch([
+                env.xiaoxiaole.prepare(userQuery).bind(...userParams),
+                env.xiaoxiaole.prepare("UPDATE user_progress SET username = ? WHERE username = ?")
+                    .bind(newUsername, oldUsername)
+            ]);
         }
 
         return new Response(JSON.stringify({ 
@@ -63,6 +71,13 @@ export async function onRequestPost(context) {
             headers: { "Content-Type": "application/json" }
         });
     } catch (e) {
-        return new Response(JSON.stringify({ error: "服务器内部错误: " + e.message }), { status: 500 });
+        return new Response(JSON.stringify({ 
+            error: "服务器内部错误", 
+            details: e.message,
+            stack: e.stack
+        }), { 
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
     }
 }

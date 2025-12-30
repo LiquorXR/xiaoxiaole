@@ -17,7 +17,7 @@ export async function onRequestPost(context) {
         }
 
         // 获取用户进度
-        const progress = await env.xiaoxiaole.prepare("SELECT level, total_score FROM user_progress WHERE username = ?")
+        const progress = await env.xiaoxiaole.prepare("SELECT level, total_score as totalScore FROM user_progress WHERE username = ?")
             .bind(username)
             .first();
 
@@ -25,7 +25,7 @@ export async function onRequestPost(context) {
             success: true,
             user: {
                 username: user.username,
-                progress: progress || { level: 1, total_score: 0 }
+                progress: progress || { level: 1, totalScore: 0 }
             }
         }), {
             headers: { "Content-Type": "application/json" }

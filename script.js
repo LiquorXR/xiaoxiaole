@@ -51,6 +51,16 @@ const progressBar = document.getElementById('progress-bar');
 const overlay = document.getElementById('overlay');
 const restartBtn = document.getElementById('restart-btn');
 
+// Settings Elements
+const settingsBtn = document.getElementById('settings-btn');
+const settingsScreen = document.getElementById('settings-screen');
+const closeSettingsBtn = document.getElementById('close-settings-btn');
+const logoutBtn = document.getElementById('logout-btn');
+const updateProfileBtn = document.getElementById('update-profile-btn');
+const editUsernameInput = document.getElementById('edit-username');
+const editPasswordInput = document.getElementById('edit-password');
+const settingsMsg = document.getElementById('settings-msg');
+
 function getLevelConfig(lvl) {
     /**
      * 降低难度后的平滑增长逻辑：
@@ -806,6 +816,66 @@ async function updateRankUI() {
     } catch (e) {
         rankList.innerHTML = '<div style="padding:20px;color:#e74c3c">加载排行榜失败</div>';
     }
+}
+
+// --- 设置与账户管理 ---
+
+settingsBtn.onclick = () => {
+    editUsernameInput.value = currentUser || '';
+    editPasswordInput.value = '';
+    settingsMsg.innerText = '';
+    settingsScreen.classList.remove('hidden');
+};
+
+closeSettingsBtn.onclick = () => {
+    settingsScreen.classList.add('hidden');
+};
+
+logoutBtn.onclick = () => {
+    localStorage.removeItem('game_user');
+    currentUser = null;
+    userData = { level: 1, totalScore: 0 };
+    settingsScreen.classList.add('hidden');
+    loginScreen.classList.remove('hidden');
+    // 重置游戏状态
+    gameBoard.innerHTML = '';
+};
+
+updateProfileBtn.onclick = async () => {
+    const newUsername = editUsernameInput.value.trim();
+    const newPassword = editPasswordInput.value;
+
+    if (!newUsername) {
+        showSettingsMsg('昵称不能为空', 'error');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/update_profile', {
+            method: 'POST',
+            body: JSON.stringify({
+                oldUsername: currentUser,
+                newUsername,
+                newPassword
+            })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            showSettingsMsg('修改成功！', 'success');
+            currentUser = newUsername;
+            localStorage.setItem('game_user', currentUser);
+            setTimeout(() => settingsScreen.classList.add('hidden'), 1000);
+        } else {
+            showSettingsMsg(data.error || '修改失败', 'error');
+        }
+    } catch (e) {
+        showSettingsMsg('网络错误', 'error');
+    }
+};
+
+function showSettingsMsg(text, type) {
+    settingsMsg.innerText = text;
+    settingsMsg.className = 'auth-msg ' + type;
 }
 
 // --- 自动登录逻辑 ---

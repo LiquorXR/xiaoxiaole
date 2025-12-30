@@ -43,12 +43,20 @@ body {
 
 header {
     display: flex;
-    justify-content: space-around;
-    padding: 10px 0;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 15px;
     background: white;
     border-radius: 15px;
     margin-bottom: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.header-top, .header-bottom {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 100%;
 }
 
 .stat-item {
@@ -287,12 +295,14 @@ footer {
 
 .modal {
     background: white;
-    padding: 40px;
+    padding: 30px;
     border-radius: 24px;
     width: 90%;
     max-width: 400px;
     text-align: center;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    max-height: 90vh;
+    overflow-y: auto;
 }
 
 .modal h1, .modal h2 {
@@ -450,4 +460,61 @@ footer {
     color: var(--accent-color);
     min-width: 60px;
     text-align: right;
+}
+
+.icon-btn {
+    background: #f0f4f8;
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.icon-btn:hover {
+    background: #e1e8f0;
+}
+
+.danger-btn {
+    width: 100%;
+    padding: 12px;
+    background: #ffeded;
+    color: #e74c3c;
+    border: 2px solid #ffcccc;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: all 0.2s;
+}
+
+.danger-btn:hover {
+    background: #e74c3c;
+    color: white;
+}
+
+.settings-group {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.settings-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #666;
+    font-weight: bold;
+}
+
+.settings-actions {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }

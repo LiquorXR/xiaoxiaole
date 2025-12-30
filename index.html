@@ -48,21 +48,26 @@
 
     <div id="game-container">
         <header>
-            <div class="stat-item">
-                <span class="label">得分</span>
-                <span id="score">0</span>
+            <div class="header-top">
+                <div class="stat-item">
+                    <span class="label">得分</span>
+                    <span id="score">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">关卡</span>
+                    <span id="level">1</span>
+                </div>
+                <button id="settings-btn" class="icon-btn">⚙️</button>
             </div>
-            <div class="stat-item">
-                <span class="label">关卡</span>
-                <span id="level">1</span>
-            </div>
-            <div class="stat-item">
-                <span class="label">目标</span>
-                <span id="target">100</span>
-            </div>
-            <div class="stat-item">
-                <span class="label">步数</span>
-                <span id="moves">30</span>
+            <div class="header-bottom">
+                <div class="stat-item">
+                    <span class="label">目标</span>
+                    <span id="target">100</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">步数</span>
+                    <span id="moves">30</span>
+                </div>
             </div>
         </header>
 
@@ -86,6 +91,28 @@
             </div>
         </footer>
     </div>
+
+    <!-- 设置界面 -->
+    <div id="settings-screen" class="full-screen-overlay hidden">
+        <div class="modal">
+            <h2>游戏设置</h2>
+            <div class="settings-group">
+                <label>修改昵称</label>
+                <input type="text" id="edit-username" placeholder="新昵称">
+            </div>
+            <div class="settings-group">
+                <label>修改密码</label>
+                <input type="password" id="edit-password" placeholder="新密码">
+            </div>
+            <div class="settings-actions">
+                <button id="update-profile-btn" class="primary-btn">保存修改</button>
+                <button id="logout-btn" class="danger-btn">退出登录</button>
+            </div>
+            <button id="close-settings-btn" class="secondary-btn">返回游戏</button>
+            <p id="settings-msg" class="auth-msg"></p>
+        </div>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

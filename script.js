@@ -52,36 +52,42 @@ const overlay = document.getElementById('overlay');
 const restartBtn = document.getElementById('restart-btn');
 
 function getLevelConfig(lvl) {
-    // 重新设计的平滑难度曲线（适配10行8列布局）：
-    
-    // 1. 方块种类增加：
-    // 棋盘变小（12x8 -> 10x8），连击几率略微降低
-    // 第1-3关: 4种 (简单，容易熟悉)
-    // 第4-8关: 5种
-    // 第9-14关: 6种
-    // 第15-20关: 7种
-    // 第21-30关: 8种
-    // 31关以上: 9种
+    /**
+     * 降低难度后的平滑增长逻辑：
+     * 1. 方块种类控制：方块越少，越容易连消。
+     *    1-5关: 4种 (极易)
+     *    6-12关: 5种 (简单)
+     *    13-20关: 6种 (普通)
+     *    21-35关: 7种 (挑战)
+     *    36-50关: 8种 (困难)
+     *    51关以后: 9种 (大师)
+     */
     let tileCount;
-    if (lvl <= 3) tileCount = 4;
-    else if (lvl <= 8) tileCount = 5;
-    else if (lvl <= 14) tileCount = 6;
-    else if (lvl <= 20) tileCount = 7;
-    else if (lvl <= 30) tileCount = 8;
+    if (lvl <= 5) tileCount = 4;
+    else if (lvl <= 12) tileCount = 5;
+    else if (lvl <= 20) tileCount = 6;
+    else if (lvl <= 35) tileCount = 7;
+    else if (lvl <= 50) tileCount = 8;
     else tileCount = 9;
     
-    // 2. 目标分数增加：
-    // 由于格子减少了约16%，目标分数也相应微调，保持节奏
-    // 基础分数 70，每关增加 35 + (lvl * 4)
-    // 第1关: 70
-    // 第2关: 113
-    // 第3关: 161
-    // 第10关: 640
-    const targetScore = 70 + (lvl - 1) * (35 + (lvl * 4));
+    /**
+     * 2. 目标分数增长公式：
+     * 基础分 50。
+     * 每一关增加的分数由 30 逐渐增加，但斜率很缓。
+     * 第1关: 50
+     * 第2关: 85 (增加35)
+     * 第5关: 220
+     * 第10关: 500
+     */
+    const targetScore = 50 + (lvl - 1) * (30 + lvl * 5);
     
-    // 3. 初始步数：
-    // 每关递增 5 步，基础 25 步
-    const initialMoves = 25 + (lvl - 1) * 5;
+    /**
+     * 3. 初始步数逻辑：
+     * 初始 30 步 (比之前增加 5 步，提高容错)。
+     * 每过一关固定增加 2 步，而不是 5 步，防止后期步数过多导致冗长。
+     * 这种设计让前期更容易，后期步数也够用。
+     */
+    const initialMoves = 30 + (lvl - 1) * 2;
 
     return {
         tileTypes: ALL_TILE_TYPES.slice(0, tileCount),

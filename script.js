@@ -524,11 +524,11 @@ async function processMatches() {
         dropTiles();
         renderBoardPositions();
         // 根据掉落距离动态调整等待时间，或者统一等待动画完成
-        await sleep(450);
+        await sleep(300);
         
         // Refill
         refillBoard();
-        await sleep(450);
+        await sleep(300);
         
         matches = checkMatches();
     }
@@ -550,7 +550,7 @@ function dropTiles() {
                 
                 // 给正在掉落的元素添加一个特定的过渡延迟，产生一种“波浪式”下落感
                 if (tileElements[targetIdx]) {
-                    tileElements[targetIdx].style.transitionDelay = `${(ROWS - y) * 20}ms`;
+                    tileElements[targetIdx].style.transitionDelay = `${(ROWS - y) * 15}ms`;
                 }
                 
                 board[idx] = null;
@@ -605,7 +605,7 @@ function refillBoard() {
             setTimeout(() => {
                 tileElement.style.top = getTilePos(i).top;
                 tileElement.style.opacity = '1';
-            }, 50 + (ROWS - row) * 30);
+            }, 50 + (ROWS - row) * 20);
         }
     }
 }
@@ -623,7 +623,7 @@ function renderBoardPositions() {
             // 渲染后清除延迟，以免影响后续交互（如交换）
             setTimeout(() => {
                 if (el) el.style.transitionDelay = '0ms';
-            }, 500);
+            }, 350);
         }
     });
 }

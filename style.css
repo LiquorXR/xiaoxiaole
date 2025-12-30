@@ -233,6 +233,8 @@ footer {
 .footer-btns {
     display: flex;
     justify-content: center;
+    align-items: center;
+    gap: 15px;
 }
 
 #show-rank-btn {

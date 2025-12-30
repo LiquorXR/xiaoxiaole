@@ -234,7 +234,8 @@ footer {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 15px;
+    position: relative;
+    width: 100%;
 }
 
 #show-rank-btn {
@@ -462,6 +463,11 @@ footer {
     color: var(--accent-color);
     min-width: 60px;
     text-align: right;
+}
+
+#settings-btn.icon-btn {
+    position: absolute;
+    right: 0;
 }
 
 .icon-btn {

@@ -73,14 +73,24 @@ function getLevelConfig(lvl) {
      *    71关以后: 8种 (大师)
      */
     let tileCount;
-    if (lvl <= 10) tileCount = 4;
-    else if (lvl <= 25) tileCount = 5;
-    else if (lvl <= 45) tileCount = 6;
-    else if (lvl <= 70) tileCount = 7;
-    else tileCount = 8;
+    let initialMoves;
 
-    // 初始步数逻辑：每关增加1步，最高60步
-    const initialMoves = Math.min(60, 25 + (lvl - 1));
+    if (lvl <= 10) {
+        tileCount = 4;
+        initialMoves = 25; // 极易阶段：25步
+    } else if (lvl <= 25) {
+        tileCount = 5;
+        initialMoves = 30; // 简单阶段：30步
+    } else if (lvl <= 45) {
+        tileCount = 6;
+        initialMoves = 35; // 普通阶段：35步
+    } else if (lvl <= 70) {
+        tileCount = 7;
+        initialMoves = 40; // 挑战阶段：40步
+    } else {
+        tileCount = 8;
+        initialMoves = 50; // 大师阶段：50步
+    }
     
     /**
      * 2. 目标分数增长公式 (再次优化)：

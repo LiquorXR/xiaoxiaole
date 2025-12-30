@@ -499,12 +499,12 @@ async function processMatches() {
                         createParticles(idx);
                     }
                     resolve();
-                }, i * 30); // 每个方块延迟 30ms 触发，产生序贯感
+                }, i * 15); // 每个方块延迟 15ms 触发，产生序贯感
             });
         });
 
         await Promise.all(animationPromises);
-        await sleep(400);
+        await sleep(250);
         
         score += matches.length * SCORE_PER_TILE;
         updateUI();
@@ -518,13 +518,13 @@ async function processMatches() {
             board[idx] = null;
         });
         
-        await sleep(50);
+        // await sleep(50); // 移除延迟，立即开始下落
         
         // Drop
         dropTiles();
         renderBoardPositions();
         // 根据掉落距离动态调整等待时间，或者统一等待动画完成
-        await sleep(300);
+        await sleep(200); // 进一步缩短掉落后的等待时间
         
         // Refill
         refillBoard();

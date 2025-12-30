@@ -3,9 +3,9 @@ export async function onRequestGet(context) {
 
     try {
         const ranks = await env.xiaoxiaole.prepare(`
-            SELECT username as name, total_score as score
-            FROM user_progress 
-            ORDER BY total_score DESC 
+            SELECT username as name, level, total_score as score
+            FROM user_progress
+            ORDER BY level DESC, total_score DESC
             LIMIT 10
         `).all();
 

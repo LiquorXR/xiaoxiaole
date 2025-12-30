@@ -431,9 +431,23 @@ footer {
 .rank-name {
     flex: 1;
     margin-left: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rank-level {
+    margin: 0 10px;
+    font-size: 14px;
+    color: #666;
+    background: #f0f0f0;
+    padding: 2px 8px;
+    border-radius: 10px;
 }
 
 .rank-score {
     font-weight: bold;
     color: var(--accent-color);
+    min-width: 60px;
+    text-align: right;
 }

@@ -724,6 +724,7 @@ async function updateRankUI() {
             <div class="rank-item">
                 <span class="rank-index">${index + 1}</span>
                 <span class="rank-name">${item.name}</span>
+                <span class="rank-level">第 ${item.level} 关</span>
                 <span class="rank-score">${item.score}</span>
             </div>
         `).join('');

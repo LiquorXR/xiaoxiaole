@@ -6,6 +6,7 @@ const SUPER_TILE_CHANCE = 0.05; // 5% 概率出现
 const SCORE_PER_TILE = 1;
 
 let currentTileTypes = [];
+let currentSuperTileChance = 0.05;
 let board = []; // Stores the type of each tile
 let tileElements = []; // Stores the DOM elements
 let score = 0;
@@ -65,30 +66,32 @@ function getLevelConfig(lvl) {
     /**
      * 降低难度后的平滑增长逻辑：
      * 1. 方块种类控制：方块越少，越容易连消。
-     *    1-5关: 4种 (极易)
-     *    6-12关: 5种 (简单)
-     *    13-20关: 6种 (普通)
-     *    21-35关: 7种 (挑战)
-     *    36-50关: 8种 (困难)
-     *    51关以后: 9种 (大师)
+     *    1-10关: 4种 (极易)
+     *    11-25关: 5种 (简单)
+     *    26-45关: 6种 (普通)
+     *    46-70关: 7种 (挑战)
+     *    71关以后: 8种 (大师)
      */
     let tileCount;
-    if (lvl <= 5) tileCount = 4;
-    else if (lvl <= 12) tileCount = 5;
-    else if (lvl <= 20) tileCount = 6;
-    else if (lvl <= 35) tileCount = 7;
-    else if (lvl <= 50) tileCount = 8;
-    else tileCount = 9;
+    let initialMoves;
+
+    if (lvl <= 10) {
+        tileCount = 4;
+        initialMoves = 25; // 极易阶段：25步
+    } else if (lvl <= 25) {
+        tileCount = 5;
+        initialMoves = 30; // 简单阶段：30步
+    } else if (lvl <= 45) {
+        tileCount = 6;
+        initialMoves = 35; // 普通阶段：35步
+    } else if (lvl <= 70) {
+        tileCount = 7;
+        initialMoves = 40; // 挑战阶段：40步
+    } else {
+        tileCount = 8;
+        initialMoves = 50; // 大师阶段：50步
+    }
     
-    /**
-     * 2. 目标分数增长公式：
-     * 基础分 50。
-     * 每一关增加的分数由 30 逐渐增加，但斜率很缓。
-     * 第1关: 50
-     * 第2关: 85 (增加35)
-     * 第5关: 220
-     * 第10关: 500
-     */
     /**
      * 2. 目标分数增长公式 (再次优化)：
      * 进一步降低增长斜率。
@@ -97,17 +100,20 @@ function getLevelConfig(lvl) {
      * 第20关: 620
      */
     const targetScore = 50 + (lvl - 1) * 30;
-    
-    /**
-     * 3. 初始步数逻辑 (再次优化)：
-     * 设置初始 25 步，随关卡增加，50 步封顶。
-     */
-    const initialMoves = Math.min(25 + (lvl - 1), 50);
+
+    // 4. 超级方块概率：每个难度阶段增加1%，基础5%
+    let superTileChance;
+    if (lvl <= 10) superTileChance = 0.05;
+    else if (lvl <= 25) superTileChance = 0.06;
+    else if (lvl <= 45) superTileChance = 0.07;
+    else if (lvl <= 70) superTileChance = 0.08;
+    else superTileChance = 0.09;
 
     return {
         tileTypes: ALL_TILE_TYPES.slice(0, tileCount),
         target: targetScore,
-        moves: initialMoves
+        moves: initialMoves,
+        superTileChance: superTileChance
     };
 }
 
@@ -122,16 +128,20 @@ function startLevel(lvl) {
     console.log(`Starting Level ${lvl}. Score before transition: ${score}, Old Target: ${target}`);
     
     let overflow = 0;
+    let remainingMoves = 0;
     if (score >= target) {
         overflow = score - target;
-        console.log(`Overflow detected: ${overflow}`);
+        remainingMoves = Math.max(0, moves);
+        console.log(`Overflow detected: ${overflow}, Remaining moves: ${remainingMoves}`);
     }
     
     // 加载新配置
     const config = getLevelConfig(lvl);
     currentTileTypes = config.tileTypes;
+    currentSuperTileChance = config.superTileChance;
     target = config.target;
-    moves = config.moves;
+    // 叠加步数
+    moves = config.moves + remainingMoves;
     
     // 应用溢出分（如果有）
     score = overflow;
@@ -520,7 +530,7 @@ function refillBoard() {
         if (board[i] === null) {
             // 判定是否生成超级方块
             let type;
-            if (Math.random() < SUPER_TILE_CHANCE) {
+            if (Math.random() < currentSuperTileChance) {
                 type = SUPER_TILE;
             } else {
                 type = currentTileTypes[Math.floor(Math.random() * currentTileTypes.length)];
@@ -597,7 +607,7 @@ async function checkGameOver() {
         if (!document.getElementById('next-level-btn')) {
             const nextBtn = document.createElement('button');
             nextBtn.id = 'next-level-btn';
-            nextBtn.innerText = `进入第 ${level + 1} 关`;
+            nextBtn.innerText = '继续闯关';
             nextBtn.onclick = () => {
                 level++;
                 // 更新进度并存盘

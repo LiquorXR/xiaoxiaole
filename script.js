@@ -80,19 +80,19 @@ function getLevelConfig(lvl) {
      * 第10关: 500
      */
     /**
-     * 2. 目标分数增长公式 (优化后)：
-     * 降低增长斜率，采用分段线性 + 基础增量。
+     * 2. 目标分数增长公式 (再次优化)：
+     * 进一步降低增长斜率。
      * 第1关: 50
-     * 第10关: 500
-     * 第20关: 1200
+     * 第10关: 320
+     * 第20关: 620
      */
-    const targetScore = 50 + (lvl - 1) * 50;
+    const targetScore = 50 + (lvl - 1) * 30;
     
     /**
-     * 3. 初始步数逻辑 (优化后)：
-     * 设置初始 25 步，随关卡增加，但 40 步封顶。
+     * 3. 初始步数逻辑 (再次优化)：
+     * 设置初始 25 步，随关卡增加，50 步封顶。
      */
-    const initialMoves = Math.min(25 + (lvl - 1), 40);
+    const initialMoves = Math.min(25 + (lvl - 1), 50);
 
     return {
         tileTypes: ALL_TILE_TYPES.slice(0, tileCount),

@@ -467,13 +467,6 @@ function checkMatches() {
 async function processMatches() {
     let matches = checkMatches();
     while (matches.length > 0) {
-        // 消除反馈：根据消除数量决定震动强度
-        if (matches.length >= 6) {
-            triggerVibration([50, 30, 50]); // 强力消除反馈
-        } else {
-            triggerVibration(30); // 普通消除反馈
-        }
-
         // 检查是否有超级方块被匹配
         let superTileMatched = false;
         let superTileIndices = [];
@@ -514,6 +507,8 @@ async function processMatches() {
                         el.classList.add('match');
                         if (board[idx] === SUPER_TILE) el.classList.add('super-match');
                         createParticles(idx);
+                        // 每个方块消除时触发震动反馈
+                        triggerVibration(30);
                     }
                     resolve();
                 }, i * 15); // 每个方块延迟 15ms 触发，产生序贯感

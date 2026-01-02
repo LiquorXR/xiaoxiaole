@@ -62,6 +62,13 @@ const editUsernameInput = document.getElementById('edit-username');
 const editPasswordInput = document.getElementById('edit-password');
 const settingsMsg = document.getElementById('settings-msg');
 
+// --- 触感反馈工具 ---
+function triggerVibration(pattern) {
+    if ("vibrate" in navigator) {
+        navigator.vibrate(pattern);
+    }
+}
+
 function getLevelConfig(lvl) {
     /**
      * 降低难度后的平滑增长逻辑：
@@ -209,6 +216,9 @@ function createBoard() {
 
 function handleStart(index, x, y) {
     if (isProcessing || moves <= 0 || isNaN(index)) return;
+
+    // 点击/选择反馈
+    triggerVibration(10);
 
     // 如果已经选中了一个方块，且点击的是另一个方块
     if (selectedTile !== null && selectedTile !== index) {
@@ -457,6 +467,13 @@ function checkMatches() {
 async function processMatches() {
     let matches = checkMatches();
     while (matches.length > 0) {
+        // 消除反馈：根据消除数量决定震动强度
+        if (matches.length >= 6) {
+            triggerVibration([50, 30, 50]); // 强力消除反馈
+        } else {
+            triggerVibration(30); // 普通消除反馈
+        }
+
         // 检查是否有超级方块被匹配
         let superTileMatched = false;
         let superTileIndices = [];

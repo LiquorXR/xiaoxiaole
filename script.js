@@ -508,7 +508,7 @@ async function processMatches() {
                         if (board[idx] === SUPER_TILE) el.classList.add('super-match');
                         createParticles(idx);
                         // 每个方块消除时触发震动反馈
-                        triggerVibration(30);
+                        triggerVibration(50);
                     }
                     resolve();
                 }, i * 15); // 每个方块延迟 15ms 触发，产生序贯感

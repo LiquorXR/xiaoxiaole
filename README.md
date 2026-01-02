@@ -58,22 +58,22 @@ This project is optimized for the Cloudflare ecosystem (Pages + Workers + D1).
 ### 2. D1 Database Configuration
 1. Create a D1 database via dashboard or CLI:
    ```bash
-   npx wrangler d1 create xiaoxiaole-db
+   npx wrangler d1 create xiaoxiaole
    ```
 2. **Initialize Schema**:
    ```bash
    # Local environment
-   npx wrangler d1 execute xiaoxiaole-db --local --file=./schema.sql
+   npx wrangler d1 execute xiaoxiaole --local --file=./schema.sql
    
    # Remote (Production) environment
-   npx wrangler d1 execute xiaoxiaole-db --remote --file=./schema.sql
+   npx wrangler d1 execute xiaoxiaole --remote --file=./schema.sql
    ```
 
 ### 3. Local Development
 1. **Start Dev Server**:
    Cloudflare Pages can simulate Workers and D1 locally:
    ```bash
-   npx wrangler pages dev . --d1 xiaoxiaole-db
+   npx wrangler pages dev . --d1 xiaoxiaole
    ```
 2. Open `http://localhost:8788` in your browser.
 
@@ -82,8 +82,8 @@ This project is optimized for the Cloudflare ecosystem (Pages + Workers + D1).
    - Push your code to a GitHub repository.
    - Create a new Pages project in Cloudflare dashboard and link the repo.
    - Go to **Settings** -> **Functions** -> **D1 Database Bindings**:
-     - **Variable name**: `DB` (must match `env.DB` in code).
-     - **D1 database**: Select `xiaoxiaole-db`.
+     - **Variable name**: `xiaoxiaole` (must match your code's binding).
+     - **D1 database**: Select `xiaoxiaole`.
 2. **Manual Deployment**:
    ```bash
    npx wrangler pages deploy . --project-name xiaoxiaole
@@ -91,27 +91,33 @@ This project is optimized for the Cloudflare ecosystem (Pages + Workers + D1).
 
 ## D1 Database Management
 
-Use the following commands to manage your database via Wrangler CLI. Replace `<database-name>` with your actual D1 name.
+Use the following commands to manage your database via Wrangler CLI.
 
 - **Delete a User**:
   ```bash
-  npx wrangler d1 execute <database-name> --command="DELETE FROM users WHERE username = 'PlayerName';"
-  npx wrangler d1 execute <database-name> --command="DELETE FROM user_progress WHERE username = 'PlayerName';"
+  npx wrangler d1 execute xiaoxiaole --command="DELETE FROM users WHERE username = 'PlayerName';"
+  npx wrangler d1 execute xiaoxiaole --command="DELETE FROM user_progress WHERE username = 'PlayerName';"
   ```
 
 - **Reset All Progress**:
   ```bash
-  npx wrangler d1 execute <database-name> --command="UPDATE user_progress SET level = 1, total_score = 0;"
+  ```bash
+  npx wrangler d1 execute xiaoxiaole --command="UPDATE user_progress SET level = 1, total_score = 0;"
   ```
 
 - **Clear Leaderboard**:
   ```bash
-  npx wrangler d1 execute <database-name> --command="DELETE FROM user_progress;"
+  npx wrangler d1 execute xiaoxiaole --command="DELETE FROM user_progress;"
   ```
 
 - **Check Statistics**:
   ```bash
-  npx wrangler d1 execute <database-name> --command="SELECT COUNT(*) FROM users;"
+  npx wrangler d1 execute xiaoxiaole --command="SELECT COUNT(*) FROM users;"
+  ```
+
+- **Check Leaderboard**:
+  ```bash
+  npx wrangler d1 execute xiaoxiaole --command="SELECT username, level, total_score FROM user_progress ORDER BY level DESC, total_score DESC LIMIT 10;"
   ```
 
 ## Game Rules

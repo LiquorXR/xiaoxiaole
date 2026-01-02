@@ -87,7 +87,7 @@ d:/A_project_01/xiaoxiaole
    - 将代码推送到 GitHub 仓库。
    - 在 Cloudflare Pages 后台新建项目，选择该仓库。
    - 在“设置” -> “函数” -> “D1 数据库绑定”中，添加绑定：
-     - **变量名称**: `DB` (必须与代码中 `env.DB` 保持一致)
+     - **变量名称**: `xiaoxiaole` (必须与代码中的绑定变量一致)
      - **D1 数据库**: 选择刚才创建的 `xiaoxiaole-db`
 2. **命令行部署 (可选)**：
    ```bash
@@ -105,34 +105,34 @@ d:/A_project_01/xiaoxiaole
 - **删除特定用户**：
   ```bash
   # 删除用户账号及其进度
-  npx wrangler d1 execute <database-name> --command="DELETE FROM users WHERE username = '玩家昵称';"
-  npx wrangler d1 execute <database-name> --command="DELETE FROM user_progress WHERE username = '玩家昵称';"
+  npx wrangler d1 execute xiaoxiaole --command="DELETE FROM users WHERE username = '玩家昵称';"
+  npx wrangler d1 execute xiaoxiaole --command="DELETE FROM user_progress WHERE username = '玩家昵称';"
   ```
 
 - **重置所有玩家进度**：
   ```bash
   # 将所有玩家的关卡重置为1，得分重置为0
-  npx wrangler d1 execute <database-name> --command="UPDATE user_progress SET level = 1, total_score = 0;"
+  npx wrangler d1 execute xiaoxiaole --command="UPDATE user_progress SET level = 1, total_score = 0;"
   ```
 
 - **清空排行榜（清空所有进度数据）**：
   ```bash
-  npx wrangler d1 execute <database-name> --command="DELETE FROM user_progress;"
+  npx wrangler d1 execute xiaoxiaole --command="DELETE FROM user_progress;"
   ```
 
 - **清空所有用户数据（危险操作）**：
   ```bash
-  npx wrangler d1 execute <database-name> --command="DELETE FROM user_progress; DELETE FROM users;"
+  npx wrangler d1 execute xiaoxiaole --command="DELETE FROM user_progress; DELETE FROM users;"
   ```
 
 - **查询当前注册用户数**：
   ```bash
-  npx wrangler d1 execute <database-name> --command="SELECT COUNT(*) FROM users;"
+  npx wrangler d1 execute xiaoxiaole --command="SELECT COUNT(*) FROM users;"
   ```
 
 - **查看排行榜数据**：
   ```bash
-  npx wrangler d1 execute <database-name> --command="SELECT * FROM user_progress ORDER BY total_score DESC LIMIT 10;"
+  npx wrangler d1 execute xiaoxiaole --command="SELECT username, level, total_score FROM user_progress ORDER BY level DESC, total_score DESC LIMIT 10;"
   ```
 
 ## 游戏规则

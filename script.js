@@ -73,25 +73,25 @@ function getLevelConfig(lvl) {
     /**
      * 降低难度后的平滑增长逻辑：
      * 1. 方块种类控制：方块越少，越容易连消。
-     *    1-10关: 4种 (极易)
-     *    11-25关: 5种 (简单)
-     *    26-45关: 6种 (普通)
-     *    46-70关: 7种 (挑战)
-     *    71关以后: 8种 (大师)
+     *    1-20关: 4种 (极易)
+     *    21-45关: 5种 (简单)
+     *    46-75关: 6种 (普通)
+     *    76-100关: 7种 (挑战)
+     *    101关以后: 8种 (大师)
      */
     let tileCount;
     let initialMoves;
 
-    if (lvl <= 10) {
+    if (lvl <= 20) {
         tileCount = 4;
         initialMoves = 25; // 极易阶段：25步
-    } else if (lvl <= 25) {
+    } else if (lvl <= 45) {
         tileCount = 5;
         initialMoves = 30; // 简单阶段：30步
-    } else if (lvl <= 45) {
+    } else if (lvl <= 75) {
         tileCount = 6;
         initialMoves = 35; // 普通阶段：35步
-    } else if (lvl <= 70) {
+    } else if (lvl <= 100) {
         tileCount = 7;
         initialMoves = 40; // 挑战阶段：40步
     } else {
@@ -100,20 +100,21 @@ function getLevelConfig(lvl) {
     }
     
     /**
-     * 2. 目标分数增长公式 (再次优化)：
+    /**
+     * 2. 目标分数增长公式 (每关增长15分)：
      * 进一步降低增长斜率。
-     * 第1关: 50
-     * 第10关: 320
-     * 第20关: 620
+     * 第1关: 100
+     * 第10关: 235
+     * 第20关: 385
      */
-    const targetScore = 50 + (lvl - 1) * 30;
+    const targetScore = 100 + (lvl - 1) * 15;
 
     // 4. 超级方块概率：每个难度阶段增加1%，基础5%
     let superTileChance;
-    if (lvl <= 10) superTileChance = 0.05;
-    else if (lvl <= 25) superTileChance = 0.06;
-    else if (lvl <= 45) superTileChance = 0.07;
-    else if (lvl <= 70) superTileChance = 0.08;
+    if (lvl <= 20) superTileChance = 0.05;
+    else if (lvl <= 45) superTileChance = 0.06;
+    else if (lvl <= 75) superTileChance = 0.07;
+    else if (lvl <= 100) superTileChance = 0.08;
     else superTileChance = 0.09;
 
     return {

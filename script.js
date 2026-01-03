@@ -2,16 +2,16 @@ const ROWS = 10;
 const COLS = 8;
 const ALL_TILE_TYPES = ['🍎', '🍇', '🍊', '🍋', '🥝', '🫐', '🍓', '🍑', '🍍'];
 const SUPER_TILE = '🌟'; // 超级方块标识
-const SUPER_TILE_CHANCE = 0.05; // 5% 概率出现
+const SUPER_TILE_CHANCE = 0.02; // 2% 基础概率出现
 const SCORE_PER_TILE = 1;
 
 let currentTileTypes = [];
-let currentSuperTileChance = 0.05;
+let currentSuperTileChance = 0.02;
 let board = []; // Stores the type of each tile
 let tileElements = []; // Stores the DOM elements
 let score = 0;
 let moves = 30;
-let target = 100;
+let target = 110;
 let level = 1;
 let selectedTile = null;
 let isProcessing = false;
@@ -100,22 +100,21 @@ function getLevelConfig(lvl) {
     }
     
     /**
-    /**
-     * 2. 目标分数增长公式 (每关增长15分)：
+     * 2. 目标分数增长公式 (每关增长10分)：
      * 进一步降低增长斜率。
-     * 第1关: 100
-     * 第10关: 235
-     * 第20关: 385
+     * 第1关: 110
+     * 第10关: 200
+     * 第20关: 300
      */
-    const targetScore = 100 + (lvl - 1) * 15;
+    const targetScore = 110 + (lvl - 1) * 10;
 
-    // 4. 超级方块概率：每个难度阶段增加1%，基础5%
+    // 4. 超级方块概率：每个难度阶段增加2%，基础2%
     let superTileChance;
-    if (lvl <= 20) superTileChance = 0.05;
-    else if (lvl <= 45) superTileChance = 0.06;
-    else if (lvl <= 75) superTileChance = 0.07;
+    if (lvl <= 20) superTileChance = 0.02;
+    else if (lvl <= 45) superTileChance = 0.04;
+    else if (lvl <= 75) superTileChance = 0.06;
     else if (lvl <= 100) superTileChance = 0.08;
-    else superTileChance = 0.09;
+    else superTileChance = 0.10;
 
     return {
         tileTypes: ALL_TILE_TYPES.slice(0, tileCount),

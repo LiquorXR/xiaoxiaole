@@ -74,29 +74,23 @@ function getLevelConfig(lvl) {
      * 降低难度后的平滑增长逻辑：
      * 1. 方块种类控制：方块越少，越容易连消。
      *    1-20关: 4种 (极易)
-     *    21-45关: 5种 (简单)
-     *    46-75关: 6种 (普通)
-     *    76-100关: 7种 (挑战)
-     *    101关以后: 8种 (大师)
+     *    21-45关: 4种 (极易)
+     *    46-75关: 5种 (简单)
+     *    76-100关: 5种 (简单)
+     *    101关以后: 6种 (普通)
      */
     let tileCount;
     let initialMoves;
 
-    if (lvl <= 20) {
+    if (lvl <= 45) {
         tileCount = 4;
-        initialMoves = 25; // 极易阶段：25步
-    } else if (lvl <= 45) {
-        tileCount = 5;
-        initialMoves = 30; // 简单阶段：30步
-    } else if (lvl <= 75) {
-        tileCount = 6;
-        initialMoves = 35; // 普通阶段：35步
+        initialMoves = 30; // 极易阶段：30步
     } else if (lvl <= 100) {
-        tileCount = 7;
-        initialMoves = 40; // 挑战阶段：40步
+        tileCount = 5;
+        initialMoves = 40; // 简单阶段：40步
     } else {
-        tileCount = 8;
-        initialMoves = 50; // 大师阶段：50步
+        tileCount = 6;
+        initialMoves = 50; // 普通阶段：50步
     }
     
     /**
